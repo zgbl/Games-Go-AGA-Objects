@@ -1,10 +1,10 @@
-#===============================================================================
-#  DESCRIPTION:  test for Games::Go::AGA::Parse::TDList
+################################################################################
+# ABSTRACT:  tests for Games::Go::AGA::Objects::TDList
 #
-#       AUTHOR:  Reid Augustin
-#        EMAIL:  reid@HelloSix.com
-#      CREATED:  04/07/2016 12:41:54 PM
-#===============================================================================
+#   AUTHOR:  Reid Augustin
+#    EMAIL:  reid@HelloSix.com
+#  CREATED:  04/07/2016 12:41:54 PM
+################################################################################
 
 use 5.008;
 use strict;
