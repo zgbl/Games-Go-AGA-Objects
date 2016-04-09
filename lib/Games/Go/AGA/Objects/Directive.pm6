@@ -9,8 +9,9 @@ use v6;
 ################################################################################
 
 class Games::Go::AGA::Objects::Directive {
-    has $.key is required;  # directive name
-    has @.values;           # one or more values
+    subset str-no-space of Str where { m/^\S+$/ };
+    has str-no-space $.key is required;  # directive name
+    has str-no-space @.values;           # one or more values
 
     my @booleans = qw[ TEST AGA_RATED ]; # class variable
 
@@ -18,16 +19,20 @@ class Games::Go::AGA::Objects::Directive {
     #
     # methods to modify the class list of booleans
     #
-    method add_boolean (Str $key) {
-        $key = $key.uc;     # booleans are all upper-case
-        .delete_boolean($key);  # prevent duplicates
+    method booleans {
+        @booleans;
+    }
+
+    method add_boolean (Str $k) {
+        my $key = $k.uc;     # booleans are all upper-case
+        $.delete_boolean($key);  # prevent duplicates
         push @booleans, $key;
     }
 
-    method delete_boolean (Str $key) {
-        $key = $key.uc;     # booleans are all upper-case
+    method delete_boolean (Str $k) {
+        my $key = $k.uc;     # booleans are all upper-case
         my @new_booleans;
-        @booleans.map{ @new_booleans.push if (* ne $key) };
+        @booleans.map( { @new_booleans.push($_) if (not $_ ~~ $key); } );
         @booleans = @new_booleans;
     }
 

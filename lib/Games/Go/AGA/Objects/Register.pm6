@@ -18,14 +18,14 @@ use Games::Go::AGA::Objects::Player;
 #   Games::Go::AGA::Objects::Register::Grammer.parse($string, :actions($register));
 # Alternatively, make a 'new' one and use add_* methods to populate
 class Games::Go::AGA::Objects::Register {
-    has @!directives;   # array of directive objects
-    has @!players;      # array of player objects
-    has @!comments;     # array of strings
+    has Games::Go::AGA::Objects::Directive @!directives;   # array of directive objects
+    has Games::Go::AGA::Objects::Player    @!players;      # array of player objects
+    has Str                                @!comments;     # array of strings
 
 
     ######################################
     #
-    # 'action object methods - construct directly from Grammer:
+    # 'action object' methods - construct directly from Grammer:
     #
     method directive ($/) {
         .add_directive(

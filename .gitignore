@@ -4,3 +4,4 @@ Games-Go-AGA-Objects*
 .build/
 *.vim
 notes*
+lib/.precomp/
