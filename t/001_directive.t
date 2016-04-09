@@ -35,7 +35,7 @@ ok( $d.values[2] eq 'TV_4',  q[third value is 'TV_4']);
 
 ok($d.booleans ~~ qw[ TEST AGA_RATED ], 'default booleans');
 ok($d.delete_boolean('AGA_RATED') ~~ 'TEST', 'deleted AGA_RATED boolean');
-ok($d.add_boolean('Foo') ~~ qw[ TEST FOO ], 'added FOO boolean');
+ok($d.add-boolean('Foo') ~~ qw[ TEST FOO ], 'added FOO boolean');
 
 my $X;
 try {
