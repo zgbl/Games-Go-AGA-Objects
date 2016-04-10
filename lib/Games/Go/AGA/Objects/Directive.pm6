@@ -13,8 +13,12 @@ class Games::Go::AGA::Objects::Directive {
 
     has Str-no-Space $.key is required;  # directive name
     has Str-no-Space @.values;           # one or more values
+    has              &!change-callback = sub { };
 
     my @booleans = qw[ TEST AGA_RATED ]; # class variable
+
+    method set-change-callback (&ccb)       { &!change-callback = &ccb; self };
+    method changed { &!change-callback(); self}
 
     ######################################
     #
@@ -28,6 +32,8 @@ class Games::Go::AGA::Objects::Directive {
         my $key = $k.uc;     # booleans are all upper-case
         $.delete-boolean($key);  # prevent duplicates
         push @booleans, $key;
+        $.changed;
+        self;
     }
 
     method delete-boolean (Str $k) {
@@ -35,6 +41,8 @@ class Games::Go::AGA::Objects::Directive {
         my @new-booleans;
         @booleans.map( { @new-booleans.push($_) if (not $_ ~~ $key); } );
         @booleans = @new-booleans;
+        $.changed;
+        self;
     }
 
     ######################################
@@ -43,5 +51,7 @@ class Games::Go::AGA::Objects::Directive {
     #
     method set-values (@values) {
         @!values = @values;
+        $.changed;
+        self;
     }
 }

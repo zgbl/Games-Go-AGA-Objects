@@ -20,33 +20,75 @@ class Games::Go::AGA::Objects::Player {
     has Str    $.state;
     has Str    $.club;
     has Str    $.comment;
-    has Num    $.sigma;    # for the rating system
+    has Num    $.sigma;    # for the calculating ratings
     has Str    $.flags;    # other flags
-    has Code   $change-callback = { };
+    has        &!change-callback = method { };
 
     ######################################
     #
     # accessors
     #
-    method get-id { $.id };                           method set-id (AGA-Id $id) { $.id = $id };
-    method get-last-name { $.last-name };             method set-last-name (Str $last) { $.last-name = $last };
-    method get-first-name { $.first-name };           method set-first-name (Str $first) { $.first-name = $first};
-    method get-rank { $.rank };                       method set-rank (Str $rank) { $.rank = $rank };
-    method get-rating { $.rating };                   method set-rating (Num $rating) { $.rating = $rating };
-    method get-membership-type { $.membership-type }; method set-membership-type (Str $type) { $.membership-type = $type };
-    method get-membership-date { $.membership-date }; method set-membership-date (Date $date) { $.membership-date = $date };
-    method get-state { $.state };                     method set-state (Str $state) { $.state = $state };
-    method get-club { $.club };                       method set-club (Str $club) { $.club = $club };
-    method get-comment { $.comment };                 method set-comment (Str $comment) { $.comment = $comment };
-    method get-sigma { $.sigma };                     method set-sigma (Num $sigma) { $.sigma = $sigma };
-    method get-flags { $.flags };                     method set-flags (Str $flags) { $.flags = $flags };
-    method set-change-callback (Code $ccb) { $.change-callback =-$ccb };
+    method set-id (AGA-Id $id)              { $!id = $id; $.changed; self};
+    method set-last-name (Str $last)        { $!last-name = $last; $.changed; self};
+    method set-first-name (Str $first)      { $!first-name = $first; self};
+    method rank {
+        $!rank.defined
+          ?? $!rank
+          !! $.rating-to-rank($!rating);
+    };
+    method set-rank (Str $rank) {
+        $!rank = $rank;
+        $!rating = $.rank-to-rating($rank);
+        $.changed;
+        self;
+    };
+    method rating {
+        $!rating.defined
+          ?? $!rating
+          !! $.rank-to-rating($!rank);
+    };
+    method set-rating (Rating $rating)      {
+        $!rating = $rating;
+        $!rank = $.rating-to-rank($rating);
+        $.changed;
+        self;
+    };
+    method set-membership-type (Str $type)  { $!membership-type = $type; $.changed; self; }
+    method set-membership-date (Date $date) { $!membership-date = $date; $.changed; self; }
+    method set-state (Str $state)           { $!state = $state; $.changed; self; }
+    method set-club (Str $club)             { $!club = $club; $.changed; self; }
+    method set-comment (Str $comment)       { $!comment = $comment; $.changed; self; }
+    method set-sigma (Rat $sigma)           { $!sigma = $sigma; $.changed; self; }
+    method set-flags (Str $flags)           { $!flags = $flags; $.changed; self; }
+    method set-change-callback (&ccb)       { &!change-callback = &ccb; self; }
 
     ######################################
     #
     # methods
     #
-    method changed { $.($.change-callback)(); }
+    method changed { &!change-callback(); self; }
 
-    method get-rating-or-rank { defined $.rating ?? $.rating !! $.rank; }
+    # rank is coarse-grained.  return middle of rating range.
+    method rank-to-rating ( Rank $rank ) {
+        return if not $rank.defined;
+        $rank ~~ m:i/(\d+)(<[dk]>)/;
+        $/[1].uc ~~ 'D'
+          ??  $/[0] + 0.5   # dan from 1 to 9.99
+          !! -$/[0] - 0.5;  # kyu from -99.99 to -1
+    }
+
+    method rating-to-rank ( Rating $rating ) {
+        return if not $rating.defined;
+        return $rating.Int.abs ~ ($rating > 0 ?? 'D' !! 'K');
+    }
+
+    method normalize-id ( Str $id ) {
+        # separate word part from number part,
+        # remove leading zeros from digit part
+        $id ~~ m:i/(<[a..z_]>+)0*(\d+)/;
+        if not ($/[0].defined and $/[1].defined) {
+            die 'ID expects letters followed by digits like Tmp00123';
+        }
+        return $/[0].uc ~ $/[1];
+    }
 }

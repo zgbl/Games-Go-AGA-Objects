@@ -14,28 +14,42 @@ class Games::Go::AGA::Objects::Game {
 
     has Games::Go::AGA::Objects::Player $.white is required;  # white player
     has Games::Go::AGA::Objects::Player $.black is required;  # black player
-    has Pos-Int $.table_number;
-    has Pos-Int $.handi;
-    has Num     $komi;
-    has Result $.result;    # 'w', 'b', or '?'
-    has Rating $.white-adj;  # adjusted rating as a result of this game
-    has Rating $.black-adj;
-    has Code   $change-callback = { };
+    has Pos-Int  $.table_number;
+    has Pos-Int  $.handicap;
+    has Num      $.komi;
+    has Result   $.result = '?';     # 'w', 'b', or '?'
+    has Rating   $.white-adj;        # adjusted rating as a result of this game
+    has Rating   $.black-adj;
+    has          &!change-callback = sub { };
 
     ######################################
     #
     # accessors
     #
-    method get-white { $.white };         method set-white (Player $w) { $.white = $w };
-    method get-black { $.black };         method set-black (Player $b) { $.black = $b };
-    method get-result { $.result };       method set-result (Result $r) { $.result = $r, $.changed };
-    method get-white-adj { $.white-adj }; method set-white-adj (Rating $w) { $.white-adj = $w };
-    method get-black-adj { $.black-adj }; method set-black-adj (Rating $b) { $.black-adj = $b };
-    method set-change-callback (Code $ccb) { $.change-callback = $ccb };;
+    method set-white (Games::Go::AGA::Objects::Player $w) { $!white = $w; $.changed; self; };
+    method set-black (Games::Go::AGA::Objects::Player $b) { $!black = $b; $.changed; self; };
+    method set-handicap (Result $h)   { $!handicap = $h; $.changed; self; };
+    method set-komi (Result $k)       { $!komi = $k; $.changed; self; };
+    method set-result (Result $r)     { $!result = $r; $.changed; self; };
+    method set-white-adj (Rating $w)  { $!white-adj = $w; $.changed; self; };
+    method set-black-adj (Rating $b)  { $!black-adj = $b; $.changed; self; };
+    method set-change-callback (&ccb) { &!change-callback = &ccb; self; };
 
     ######################################
     #
     # methods
     #
-    method changed { $.($.change-callback)(); }
+    method changed { &!change-callback(); self; }
+
+    method winner {
+        return $.white if $.result eq 'w';
+        return $.black if $.result eq 'b';
+        return;
+    }
+
+    method loser {
+        return $.black if $.result eq 'w';
+        return $.white if $.result eq 'b';
+        return;
+    }
 }

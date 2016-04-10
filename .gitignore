@@ -5,3 +5,4 @@ Games-Go-AGA-Objects*
 *.vim
 notes*
 lib/.precomp/
+FakeDir/
