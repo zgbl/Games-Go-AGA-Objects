@@ -11,10 +11,10 @@ use v6;
 grammar Games::Go::AGA::Objects::Register::Grammer {
     token TOP       { ^ [^^ \s* <directive> | <comment> | <player> | <empty> \s* $$]* $ }
 
-    token comment   { '#' .* }
-    token directive { '#' '#'+ <key> [\s+ <value> <[\,\;\:]>* ]* }
+    token comment   { '#' <-[#]> .* }
+    token directive { '#' '#'+ \s* <key> \s+ [<value> \s*  <[,:;]>* ]* }
         token key   { \w+ }
-        token value { <[\,\;\:]>? \w+ }    # non-capture ,;:
+        token value { <-[\s,:;]>+ }
     token player    {  <id>
                       \s+ <last-name>
                      [\s* \, \s* <first-name>]?

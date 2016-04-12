@@ -15,33 +15,30 @@ class Games::Go::AGA::Objects::Directive {
     has Str-no-Space @.values;           # one or more values
     has              &!change-callback = sub { };
 
-    my @booleans = qw[ TEST AGA_RATED ]; # class variable
+    my %booleans = ( TEST => 1, AGA_RATED => 1 ); # class variable
 
     method set-change-callback (&ccb)       { &!change-callback = &ccb; self };
     method changed { &!change-callback(); self}
 
     ######################################
     #
-    # methods to modify the class list of booleans
+    # methods to access/modify the class list of booleans
     #
     method booleans {
-        @booleans;
+        keys %booleans;
     }
 
-    method add-boolean (Str $k) {
-        my $key = $k.uc;     # booleans are all upper-case
-        $.delete-boolean($key);  # prevent duplicates
-        push @booleans, $key;
-        $.changed;
+    method is-boolean (Str $key) {
+        %booleans{$key.uc};
+    }
+
+    method add-boolean (Str $key) {
+        %booleans{$key.uc} = 1;
         self;
     }
 
-    method delete-boolean (Str $k) {
-        my $key = $k.uc;     # booleans are all upper-case
-        my @new-booleans;
-        @booleans.map( { @new-booleans.push($_) if (not $_ ~~ $key); } );
-        @booleans = @new-booleans;
-        $.changed;
+    method delete-boolean (Str $key) {
+        %booleans{$key.uc}:delete;
         self;
     }
 

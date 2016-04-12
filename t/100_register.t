@@ -5,18 +5,19 @@
 #    EMAIL:  reid@hellosix.com
 #  CREATED:  04/07/2016 12:40:28 PM
 ################################################################################
-
+use v6;
+use Test;
 
 our $VERSION = '0.001'; # VERSION
 
 use Games::Go::AGA::Objects::Register;          # the module under test
-use Games::Go::AGA::Objects::Register::Brammer; # associated Grammer
+use Games::Go::AGA::Objects::Register::Grammer; # associated Grammer
 
 my @texts = (
     qq[# comment],
-    qq[## AGA ]
-    qq[## Rounds 5 ]
-    qq[Tmp001 Augustin, Reid  5d Club=PALO BYE Drop3]
+    qq[## AGA ],
+    qq[## Rounds 5 ],
+    qq[Tmp001 Augustin, Reid  5d Club=PALO BYE Drop3],
 
     qq:to/END/
         ## Tourney  Test Tournament
@@ -33,8 +34,42 @@ my @texts = (
 
 for @texts -> $text {
     my $match = Games::Go::AGA::Objects::Register::Grammer.parse($text);
-    say $match.perl;
+    say $match.perl, "\n";
 }
 
+my @c = ('pre-comment', 'post pre-comment');
+my $register = Games::Go::AGA::Objects::Register.new(
+    comments => @c,
+);
+is($register.get-comments,
+    (
+      # 'pre-comment',
+      # 'post pre-comment',
+    ),
+    'initial comments',
+);
 
+for (1 .. 5) -> $ii {
+    my $hash = $ii % 2 ?? '' !! '# ';
+    $register.add-comment($hash ~ "comment $ii");
+}
+is($register.get-comments, (
+    #   '# pre-comment',
+    #   '# post pre-comment',
+        '# comment 1',
+        '# comment 2',
+        '# comment 3',
+        '# comment 4',
+        '# comment 5',
+    ), 'add 5 comments',
+);
+
+$register.delete-comment( rx/1||2||4/ );
+is($register.get-comments, (
+    #   '# pre-comment',
+    #   '# post pre-comment',
+        '# comment 3',
+        '# comment 5',
+    ), 'add 5 comments',
+);
 
