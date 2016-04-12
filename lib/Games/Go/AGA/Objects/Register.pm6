@@ -1,6 +1,6 @@
 #!/usr/bin/env perl6
 ################################################################################
-# ABSTRACT:  Represents AGA register.tde file, Constructable from Grammer.
+# ABSTRACT:  Represents AGA register.tde file, Constructable from Grammar.
 #
 #   AUTHOR:  Reid Augustin
 #    EMAIL:  reid@hellosix.com
@@ -8,13 +8,13 @@
 ################################################################################
 use v6;
 
-use Games::Go::AGA::Objects::Register::Grammer;
+use Games::Go::AGA::Objects::Register::Grammar;
 use Games::Go::AGA::Objects::Directive;
 use Games::Go::AGA::Objects::Player;
 
 # an 'action object' for the parser.  use like this:
 #   my $register = Games::Go::AGA::Objects::Register->new;
-#   Games::Go::AGA::Objects::Register::Grammer.parse($string, :actions($register));
+#   Games::Go::AGA::Objects::Register::Grammar.parse($string, :actions($register));
 # Alternatively, make a 'new' one and use add-* methods to populate
 class Games::Go::AGA::Objects::Register {
     has Games::Go::AGA::Objects::Directive @!directives;   # array of directive objects
@@ -24,7 +24,7 @@ class Games::Go::AGA::Objects::Register {
 
     ######################################
     #
-    # 'action object' methods - construct directly from Grammer:
+    # 'action object' methods - construct directly from Grammar:
     #
     method directive ($/) {
         .add-directive(
