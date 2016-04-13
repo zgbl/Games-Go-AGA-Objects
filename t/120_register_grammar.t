@@ -15,7 +15,7 @@ use Games::Go::AGA::Objects::Register::Grammar; # associated Grammar
 my @texts = (
     qq[# comment],
     qq[## AGA ],
-    qq[## Rounds 5 ],
+    qq[## Ro-unds 5 ],
     qq[Tmp001 Augustin, Reid  5d Club=PALO BYE Drop3],
 
     qq:to/END/
@@ -27,7 +27,7 @@ my @texts = (
             # another comment   
         Tmp001 Augustin, Reid  5d Club=PALO BYE Drop3
         Tmp011 Augustin, Abc   4k    # with a comment
-        USA011 Abc, Abc        4.4   # 4 dan
+        USA011 Abc, Abc        4.4 DROP2  # 4 dan
         END
 );
 
