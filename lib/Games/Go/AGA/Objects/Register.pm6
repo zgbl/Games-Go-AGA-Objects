@@ -22,6 +22,7 @@ class Games::Go::AGA::Objects::Register {
     has Str                                @!comments;     # array of strings
 
     method BUILD (:@comments, :@directives, :@players) {
+        say "comments: ", @comments;
         @comments.map( { $.add-comment($_) } );
         @directives.map( { $.add-directive($_) } );
         @players.map( { $.add-player($_) } );
@@ -120,6 +121,7 @@ class Games::Go::AGA::Objects::Register {
         for @comments -> $comment {
             # ensure every line in comment is actually commented
             $comment.match(/ ^^ (\s*) ('#'?) (.*) /);
+say "add-comment: $comment";
             push @!comments, $1.Str
               ?? $comment   # no change
               !! "$0# $2";
@@ -160,7 +162,7 @@ class Games::Go::AGA::Objects::Register {
     #
     method gist {
         (
-            @!comments,
+            @!comments.Str,
             @!directives.map(*.gist);
             @!players.map(*.gist);
         ).join("\n");

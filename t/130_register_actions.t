@@ -15,9 +15,12 @@ use Games::Go::AGA::Objects::Register::Actions; #   and Actions
 
 my @texts = (
     qq[# comment],
-    qq[## AGA ],
+    qq[# several\n#\n #comments],
+    qq[## AGA\n  ## AGB \n##AGc ],
+    qq[## Dir1\n  ## Dir2  \n ##dir3 ],
     qq[## Ro-unds 5 ],
-    qq[Tmp001 Augustin, Reid  5d Club=PALO BYE Drop3],
+    qq[## Dir1 5\n ##Dir2 6 \n##    Dir3],
+#   qq[Tmp001 Augustin, Reid  5d Club=PALO BYE Drop3],
 
 #   qq:to/END/
 #       ## Tourney  Test Tournament

@@ -12,8 +12,9 @@ class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
     has Str-no-Space $!key is required; # directive name
-    has Str-no-Space @!values;          # one or more values
-    has              &!change-callback = sub { };
+    has Str-no-Space @!values;          # zero or more values
+    has Str          $!comment;         # optional comment
+    has              &!change-callback = method { };
 
     my %booleans = ( TEST => 1, AGA_RATED => 1 ); # class variable
     my %arrays   = (                    # values are an array of items
@@ -21,14 +22,11 @@ class Games::Go::AGA::Objects::Directive {
         ONLINE_REGISTRATION => 1,
     );
 
-    method BUILD (:$key, :@values = (), :$change-callback = sub {}) {
-        $.set-change-callback($change-callback);
-        $!key = $key;
-        $.set-values(@values);
-    }
-
     method set-change-callback (&ccb)       { &!change-callback = &ccb; self };
-    method changed { &!change-callback(); self}
+    method changed {
+        &!change-callback() if &!change-callback;
+        self;
+    }
 
     ######################################
     #
@@ -60,7 +58,7 @@ class Games::Go::AGA::Objects::Directive {
         keys %arrays;
     }
 
-    method is-array (Str $key) {
+    method is-array (Str $key = $!key) {
         %arrays{$key.uc};
     }
 
@@ -76,15 +74,26 @@ class Games::Go::AGA::Objects::Directive {
 
     ######################################
     #
-    # set the directive values
+    # set/get the directive values
     #
-    multi method set-values (@values) {
+    method set-values (@values) {
         @!values = @values;
         $.changed;
         self;
     }
-    multi method set-values (Str $values) {
-        @!values = $values.split(rx{<[\s,;]>+});
+    method get-values {
+        if $.is-array() and @!values.elem == 1 {
+            return @!values[0].split(rx{<[\s,;]>+})
+        }
+        @!values;
+    }
+
+    ######################################
+    #
+    # set the comment
+    #
+    method set-comment (Str $comment) {
+        $!comment = $comment;
         $.changed;
         self;
     }
@@ -95,6 +104,6 @@ class Games::Go::AGA::Objects::Directive {
     #
 
     method gist {
-        "## $!key " ~ @!values.join(' ');
+        "## $!key " ~ @!values.join(' ') ~ $!comment;
     }
 }

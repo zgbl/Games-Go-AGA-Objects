@@ -18,12 +18,31 @@ class Games::Go::AGA::Objects::Player {
     has Str    $.membership-type;
     has Date   $.membership-date;
     has Str    $.state;
-    has Str    $.club;
     has Str    $.comment;
     has Num    $.sigma;    # for the calculating ratings
     has Str    $.flags;    # other flags
     has        &!change-callback = method { };
 
+    method BUILD (
+        :$id,
+        :$last-name,
+        :$first-name = '',
+        :$rank?,
+        :$rating?,
+        :$membership-type?,
+        :$membership-date?,
+        :$state?,
+        :$comment = '',
+        :$sigma?,
+        :$flags = '',
+        :&change-callback = sub {},
+    ) {
+        $!id = $.normalize-id($id);
+        for < last-name first-name rank rating membership-type membership-date state comment sigma flags > -> $key {
+            $!($key) = $$key if $$key;
+        }
+        &!change-callback = &change-callback if &change-callback;
+    }
     ######################################
     #
     # accessors
@@ -56,7 +75,6 @@ class Games::Go::AGA::Objects::Player {
     method set-membership-type (Str $type)  { $!membership-type = $type; $.changed; self; }
     method set-membership-date (Date $date) { $!membership-date = $date; $.changed; self; }
     method set-state (Str $state)           { $!state = $state; $.changed; self; }
-    method set-club (Str $club)             { $!club = $club; $.changed; self; }
     method set-comment (Str $comment)       { $!comment = $comment; $.changed; self; }
     method set-sigma (Rat $sigma)           { $!sigma = $sigma; $.changed; self; }
     method set-flags (Str $flags)           { $!flags = $flags; $.changed; self; }

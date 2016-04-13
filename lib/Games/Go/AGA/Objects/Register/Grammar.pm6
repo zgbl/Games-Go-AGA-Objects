@@ -11,24 +11,29 @@ use Grammar::Tracer;
 
 grammar Games::Go::AGA::Objects::Register::Grammar {
     token TOP       {
-        ^                           # start of string
-            [ ^^                    # start of line within string
-              \s*                   # optional leading whitespace
-                [                   # group alternation of:
-                       <directive>  # directive OR
-                    || <comment>    # comment OR
-                    || <player>     # player line OR
-                    || <error>      # or else it's an error
+        ^                             # start of string
+            [ ^^                      # start of line within string
+              \s*                     # optional leading whitespace
+                [                     # group alternation of:
+                       <directive>    # directive OR
+                    || <line-comment> # comment OR
+                    || <player>       # player line OR
+                    || <error>        # or else it's an error
                 ]
-              \N*                   # slurp to end of line (shouldn't be anything here)
-              \n?                   # optional end of line
-            ]*                      # repeat any number of times
-        $                           # end of string
+              \N*                     # slurp to end of line (shouldn't be anything here)
+              \n?                     # optional end of line
+            ]*                        # repeat any number of times
+        $                             # end of string
     }
-    token directive      { '#' '#'+ \s* <key> [ \s+ <values=.to-eol> ]? }
+    token directive      {
+                            '#' '#'+
+                            \s* <key>
+                            [ \s+ <values=.to-end> ]?
+                            [ <directive-comment=.comment> ]?
+                         }
         token key        { <key=.word> }
-        token to-eol     { \N+ }
-    token comment        { '#' <-[#]> \N* }
+        token to-end     { <-[#\n]>* }
+    token line-comment   { [ '#' <-[#]> \N* ] | '#' }    # full-line comment
     token player         {  <id>
                            \s+ <last-name=.name>
                           [\s* \, \s* <first-name=.name>]?
@@ -44,5 +49,6 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
         token rank       { \d+ <[dkDK]> }           # like 4k, 6D
         token rating     { '-'? \d+ \.? \d* }       # signed, decimal number
         token flags      { [ \s* <word> [ \=  <alphanum>+ ]? ]* }
+        token comment    { '#' \N* }
     token error     { (\S .*) {say "Error: not directive, comment, or player: $0"} }
 }
