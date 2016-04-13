@@ -91,4 +91,13 @@ class Games::Go::AGA::Objects::Player {
         }
         return $/[0].uc ~ $/[1];
     }
+
+    ######################################
+    #
+    # other methods
+    #
+
+    method gist {
+        "$!id $!last-name, $!first-name { $!rating || $!rank }";
+    }
 }

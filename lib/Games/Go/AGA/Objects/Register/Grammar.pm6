@@ -25,23 +25,24 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
             ]*                      # repeat any number of times
         $                           # end of string
     }
-    token directive      { '#' '#'+ \s* <key> [ \s+ <to-eol> ]? }
-        token key        { <alpha> \w* }
+    token directive      { '#' '#'+ \s* <key> [ \s+ <values=.to-eol> ]? }
+        token key        { <key=.word> }
         token to-eol     { \N+ }
     token comment        { '#' <-[#]> \N* }
     token player         {  <id>
-                           \s+ <last-name>
-                          [\s* \, \s* <first-name>]?
+                           \s+ <last-name=.name>
+                          [\s* \, \s* <first-name=.name>]?
                            \s+ [ <rank>|<rating> ]
                           [\s+ <flags>]?
-                          [\s* <comment>]?
+                          [\s* <player-comment=.comment>]?
                          }
         token id         { <alpha>* \d+ }
         token alpha      { <[\w] - [\d]> }          # alphas without numeric
-        token last-name  { [ \s* <alpha> \w* ]* }   # alpha followed by alphanums
-        token first-name { [ \s* <alpha> \w* ]* }   # alpha followed by alphanums
+        token alphanum   { <[\w-]> }                # alphanumerics plus '_' and '-'
+        token word       { <alpha> <alphanum>* }    # alpha followed by alphanums (normal words)
+        token name       { [ \s* <alpha> \w* ]* }   # alpha followed by alphanums
         token rank       { \d+ <[dkDK]> }           # like 4k, 6D
         token rating     { '-'? \d+ \.? \d* }       # signed, decimal number
-        token flags      { [ \s* <key> [ \=  \w+ ]? ]* }
+        token flags      { [ \s* <word> [ \=  <alphanum>+ ]? ]* }
     token error     { (\S .*) {say "Error: not directive, comment, or player: $0"} }
 }

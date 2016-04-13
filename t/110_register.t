@@ -18,8 +18,8 @@ my $register = Games::Go::AGA::Objects::Register.new(
 );
 is($register.get-comments,
     (
-      # 'pre-comment',
-      # 'post pre-comment',
+        '# pre-comment',
+        '# post pre-comment',
     ),
     'initial comments',
 );
@@ -29,8 +29,8 @@ for (1 .. 5) -> $ii {
     $register.add-comment($hash ~ "comment $ii");
 }
 is($register.get-comments, (
-    #   '# pre-comment',
-    #   '# post pre-comment',
+        '# pre-comment',
+        '# post pre-comment',
         '# comment 1',
         '# comment 2',
         '# comment 3',
@@ -41,8 +41,8 @@ is($register.get-comments, (
 
 $register.delete-comment( rx/1||2||4/ );
 is($register.get-comments, (
-    #   '# pre-comment',
-    #   '# post pre-comment',
+        '# pre-comment',
+        '# post pre-comment',
         '# comment 3',
         '# comment 5',
     ), 'add 5 comments',

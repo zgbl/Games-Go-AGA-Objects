@@ -34,7 +34,10 @@ my @texts = (
 for @texts -> $text {
     say "$text\n";
     my $match = Games::Go::AGA::Objects::Register::Grammar.parse($text);
-    say ?$match, ' ', $match.perl, "\n";
+    say ?$match;
+  # say $match.perl,
+    say $match.ast,
+    say '';
 }
 
 

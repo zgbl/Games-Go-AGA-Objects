@@ -21,41 +21,23 @@ class Games::Go::AGA::Objects::Register {
     has Games::Go::AGA::Objects::Player    @!players;      # array of player objects
     has Str                                @!comments;     # array of strings
 
-
-    ######################################
-    #
-    # 'action object' methods - construct directly from Grammar:
-    #
-    method directive ($/) {
-        .add-directive(
-            Games::Go::AGA::Objects::Directive.new(
-                $/.make: ~$/,
-            );
-        );
-        self;
-    }
-
-    method comment ($/) {
-        .add-comment($/.make: ~$/);
-        self;
-    }
-
-    method player ($/) {
-        .add-player(
-            Games::Go::AGA::Objects::Player.new(
-                $/.make: ~$,
-            );
-        );
-        self;
-    }
+    method BUILD (:@comments, :@directives, :@players) {
+        @comments.map( { $.add-comment($_) } );
+        @directives.map( { $.add-directive($_) } );
+        @players.map( { $.add-player($_) } );
+    };
 
 
     ######################################
     #
     #   directives methods
     #
-    method add-directive (Str $key, Str $value) { # TODO Str?  Array?
-        push @!directives, Games::Go::AGA::Objects::Directives.new(
+    multi method add-directive (Games::Go::AGA::Objects::Directive $directive) {
+        push @!directives, $directive;
+        self;
+    }
+    multi method add-directive (Str $key, Str $value) {
+        push @!directives, Games::Go::AGA::Objects::Directive.new(
             key   => $key,
             value => $value,
         );
@@ -99,6 +81,10 @@ class Games::Go::AGA::Objects::Register {
     #   player methods
     #
     method add-player (Games::Go::AGA::Objects::Player $player) {
+        my $id = $player.id;
+        @!players.map({
+            die "Duplicate ID $id" if *.id eq $id;
+        });
         push @!players, $player;
         self;
     }
@@ -166,5 +152,17 @@ class Games::Go::AGA::Objects::Register {
         });
         @!comments = @new_comments;
         self;
+    }
+
+    ######################################
+    #
+    #   other methods
+    #
+    method gist {
+        (
+            @!comments,
+            @!directives.map(*.gist);
+            @!players.map(*.gist);
+        ).join("\n");
     }
 }

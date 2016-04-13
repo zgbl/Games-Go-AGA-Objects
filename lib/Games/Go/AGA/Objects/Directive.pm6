@@ -11,8 +11,8 @@ use v6;
 class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
-    has Str-no-Space $.key is required; # directive name
-    has Str-no-Space @.values;          # one or more values
+    has Str-no-Space $!key is required; # directive name
+    has Str-no-Space @!values;          # one or more values
     has              &!change-callback = sub { };
 
     my %booleans = ( TEST => 1, AGA_RATED => 1 ); # class variable
@@ -20,6 +20,12 @@ class Games::Go::AGA::Objects::Directive {
         DATE => 1,
         ONLINE_REGISTRATION => 1,
     );
+
+    method BUILD (:$key, :@values = (), :$change-callback = sub {}) {
+        $.set-change-callback($change-callback);
+        $!key = $key;
+        $.set-values(@values);
+    }
 
     method set-change-callback (&ccb)       { &!change-callback = &ccb; self };
     method changed { &!change-callback(); self}
@@ -78,13 +84,17 @@ class Games::Go::AGA::Objects::Directive {
         self;
     }
     multi method set-values (Str $values) {
-        if $.is_array($,key) {
-            @!values = $values.split(rx{<[\s,;]>);
-        }
-        else {
-            @!values = $values;
-        }
+        @!values = $values.split(rx{<[\s,;]>+});
         $.changed;
         self;
+    }
+
+    ######################################
+    #
+    # other methods
+    #
+
+    method gist {
+        "## $!key " ~ @!values.join(' ');
     }
 }
