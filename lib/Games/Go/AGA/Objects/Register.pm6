@@ -8,6 +8,7 @@
 ################################################################################
 use v6;
 
+use Games::Go::AGA::Objects::Types;
 use Games::Go::AGA::Objects::Register::Grammar;
 use Games::Go::AGA::Objects::Directive;
 use Games::Go::AGA::Objects::Player;
@@ -22,22 +23,30 @@ class Games::Go::AGA::Objects::Register {
     has Str                                @!comments;     # array of strings
 
     method BUILD (:@comments, :@directives, :@players) {
-        say "comments: ", @comments;
+        say @comments.elems, " comments: ", @comments;
         @comments.map( { $.add-comment($_) } );
+        say @directives.elems, " directives";
         @directives.map( { $.add-directive($_) } );
+        say @players.elems, " players";
         @players.map( { $.add-player($_) } );
     };
-
 
     ######################################
     #
     #   directives methods
     #
+    # called from Actions:
+    method directives(Games::Go::AGA::Objects::Directive @directives) {
+        @directives.map({ .add-directive(*) });
+    }
+
     multi method add-directive (Games::Go::AGA::Objects::Directive $directive) {
+say "add-directive: ", $directive.gist;
         %!directives{$directive.key.tclc} = $directive;
         self;
     }
     multi method add-directive (Str $key, Str $value) {
+say "add-directive (Str Str): $key $value";
         %!directives{$key.tclc} = Games::Go::AGA::Objects::Directive.new(
             key   => $key,
             value => $value,
@@ -52,11 +61,11 @@ class Games::Go::AGA::Objects::Register {
     }
 
     method get-directive (Str $key) {
-        return %!directives{$key.tclc};
+        %!directives{$key.tclc};
     }
 
     method delete-directive (Str $key) {
-        %directives{$key.tclc}:delete;
+        %!directives{$key.tclc}:delete;
         self;
     }
 
@@ -64,14 +73,19 @@ class Games::Go::AGA::Objects::Register {
     #
     #   player methods
     #
+    # called from Actions:
+    method players(Games::Go::AGA::Objects::Player @players) {
+        @players.map({ .add-player(*) });
+    }
+
     method add-player (Games::Go::AGA::Objects::Player $player) {
         my $id = $player.id;
-        die "Duplicate ID $id" if %!players{id};
-        %players{$id} = $player;
+        die "Duplicate ID $id" if %!players{$id};
+        %!players{$id} = $player;
         self;
     }
 
-    method get-player (AGA-id $id) {
+    method get-player (AGA-Id $id) {
         %!players{$id};
     }
 
@@ -84,6 +98,11 @@ class Games::Go::AGA::Objects::Register {
     #
     #   comment methods
     #
+    # called from Actions:
+    method comments(Str @comments) {
+        @comments.map({ .add-comment(*) });
+    }
+
     method add-comment (Str $comment) {
         my @comments = $comment.split("\n");    # multi-line?
         for @comments -> $comment {
@@ -98,16 +117,13 @@ say "add-comment: $comment";
     }
 
     method get-comments () {
-        return @!comments;
+        @!comments;
     }
     multi method get-comment (Int $idx) {
-        return @!comments[$idx];
+        @!comments[$idx];
     }
     multi method get-comment (Regex $re) {
-        for @!comments -> $comment {
-            return $comment if $comment.match($re);
-        }
-        return; # undef
+        @!comments.grep($re);
     }
 
     multi method delete-comment (Int $idx) {
@@ -129,10 +145,15 @@ say "add-comment: $comment";
     #   other methods
     #
     method gist {
+        say (
+            @!comments.Str,
+            %!directives.values.map(*.gist);
+            %!players.values.map(*.gist);
+        );
         (
             @!comments.Str,
-            @!directives.map(*.gist);
-            @!players.map(*.gist);
+            %!directives.values.map(*.gist);
+            %!players.values.map(*.gist);
         ).join("\n");
     }
 }

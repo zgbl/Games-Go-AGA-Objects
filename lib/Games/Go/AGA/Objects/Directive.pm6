@@ -13,8 +13,8 @@ class Games::Go::AGA::Objects::Directive {
 
     has Str-no-Space $.key is required; # directive name
     has Str-no-Space @.values;          # zero or more values
-    has Str          $!comment;         # optional comment
-    has              &!change-callback = method { };
+    has Str          $.comment;         # optional comment
+    has              &.change-callback = method { };
 
     my %booleans = ( Test => 1, Aga_rated => 1 ); # class variable
     my %arrays   = (                    # values are an array of items
@@ -24,7 +24,7 @@ class Games::Go::AGA::Objects::Directive {
 
     method set-change-callback (&ccb)       { &!change-callback = &ccb; self };
     method changed {
-        &!change-callback() if &!change-callback;
+        self.&!change-callback();
         self;
     }
 
@@ -76,10 +76,13 @@ class Games::Go::AGA::Objects::Directive {
     #
     # set/get the directive values
     #
-    method set-values (@values) {
+    multi method set-values (Str $values) {
+        @!values = $values;
+        $.changed;
+    }
+    multi method set-values (Str @values) {
         @!values = @values;
         $.changed;
-        self;
     }
     method get-values {
         if $.is-array() and @!values.elem == 1 {
@@ -95,7 +98,6 @@ class Games::Go::AGA::Objects::Directive {
     method set-comment (Str $comment) {
         $!comment = $comment;
         $.changed;
-        self;
     }
 
     ######################################
@@ -104,6 +106,8 @@ class Games::Go::AGA::Objects::Directive {
     #
 
     method gist {
-        "## $!key " ~ @!values.join(' ') ~ $!comment;
+        my $gist = "## $!key ";
+        $gist ~= @!values.join(' ') if @.values;
+        $gist ~= $!comment if $.comment;
     }
 }

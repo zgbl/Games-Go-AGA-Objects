@@ -29,12 +29,14 @@ class Games::Go::AGA::Objects::Register::Actions {
     }
     method directive ($/) {
 say 'key: ', ~$<key>;
+say 'value ', ~$<value> if $<value>;
+say 'comment ', $<directive-comment>.perl if $<directive-comment>;
         my $directive = Games::Go::AGA::Objects::Directive.new(
             key => 'GGG',
           # key => ~$<key>,
         );
-        $directive.set-values(~$<values>) if ~$<values>;
-        $directive.set-comment(~$<directive-comment>) if ~$<directive-comment>;
+        $directive.set-values(~$<values>) if $<values>;
+        $directive.set-comment(~$<directive-comment>) if $<directive-comment>;
         make $directive;
     }
 
@@ -44,7 +46,7 @@ say 'key: ', ~$<key>;
     }
 
     method player ($/) {
-        say $<player>;
+        say "player: ", $<player>;
         my $player = Games::Go::AGA::Objects::Player.new(
             id         => ~$<id>,
             last-name  => ~$<last-name>,
