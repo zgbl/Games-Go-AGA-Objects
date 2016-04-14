@@ -10,7 +10,8 @@ use v6;
 
 class Games::Go::AGA::Objects::Player {
     use Games::Go::AGA::Objects::Types;
-    has AGA-Id $.id is required;  # AGA or tmp ID
+    has Str    $.id is required;  # AGA or tmp ID
+    has AGA-Id $!normalized-id;
     has Str    $.last-name is required;
     has Str    $.first-name;
     has Rank   $.rank;     # like 5D or 4k
@@ -23,26 +24,11 @@ class Games::Go::AGA::Objects::Player {
     has Str    $.flags;    # other flags
     has        &!change-callback = method { };
 
-    method BUILD (
-        :$id,
-        :$last-name,
-        :$first-name = '',
-        :$rank?,
-        :$rating?,
-        :$membership-type?,
-        :$membership-date?,
-        :$state?,
-        :$comment = '',
-        :$sigma?,
-        :$flags = '',
-        :&change-callback = sub {},
-    ) {
-        $!id = $.normalize-id($id);
-        for < last-name first-name rank rating membership-type membership-date state comment sigma flags > -> $key {
-            $!($key) = $$key if $$key;
-        }
-        &!change-callback = &change-callback if &change-callback;
+    method id { # override accessor to normalize IDs
+        $!normalized-id = $.normalize-id($!id) if not $!normalized-id;
+        $!normalized-id;
     }
+
     ######################################
     #
     # accessors
@@ -97,7 +83,7 @@ class Games::Go::AGA::Objects::Player {
 
     method rating-to-rank ( Rating $rating ) {
         return if not $rating.defined;
-        return $rating.Int.abs ~ ($rating > 0 ?? 'D' !! 'K');
+        $rating.Int.abs ~ ($rating > 0 ?? 'D' !! 'K');
     }
 
     method normalize-id ( Str $id ) {
@@ -107,7 +93,7 @@ class Games::Go::AGA::Objects::Player {
         if not ($/[0].defined and $/[1].defined) {
             die 'ID expects letters followed by digits like Tmp00123';
         }
-        return $/[0].uc ~ $/[1];
+        $/[0].uc ~ $/[1];
     }
 
     ######################################

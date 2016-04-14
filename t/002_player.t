@@ -11,6 +11,7 @@ use Test;
 
 our $VERSION = '0.001'; # VERSION
 
+say 'AbCdEfG'.tclc;
 # use-ok('Games::Go::AGA::Objects::Player');          # the module under test
 use Games::Go::AGA::Objects::Player;     # the module under test
 
@@ -23,12 +24,12 @@ throws-like({ Games::Go::AGA::Objects::Player.normalize-id('xxx') }, X::AdHoc );
 throws-like({ Games::Go::AGA::Objects::Player.normalize-id('222') }, X::AdHoc );
 
 my $p = Games::Go::AGA::Objects::Player.new(
-    id        => 'Test1',
+    id        => 'Test001',
     last-name => 'test_value',
 );
 isa-ok($p, 'Games::Go::AGA::Objects::Player');
 
-is( $p.id, 'Test1',  q[id is 'Test1']);
+is( $p.id, 'TEST1',  q[id is 'TEST1']);
 is( $p.last-name, 'test_value',  q[last-name is 'test_value']);
 
 $p = Games::Go::AGA::Objects::Player.new(

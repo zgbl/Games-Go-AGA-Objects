@@ -17,8 +17,8 @@ use Games::Go::AGA::Objects::Player;
 #   Games::Go::AGA::Objects::Register::Grammar.parse($string, :actions($register));
 # Alternatively, make a 'new' one and use add-* methods to populate
 class Games::Go::AGA::Objects::Register {
-    has Games::Go::AGA::Objects::Directive @!directives;   # array of directive objects
-    has Games::Go::AGA::Objects::Player    @!players;      # array of player objects
+    has Games::Go::AGA::Objects::Directive %!directives;   # hash by key.tclc
+    has Games::Go::AGA::Objects::Player    %!players;      # hash by player.id
     has Str                                @!comments;     # array of strings
 
     method BUILD (:@comments, :@directives, :@players) {
@@ -34,11 +34,11 @@ class Games::Go::AGA::Objects::Register {
     #   directives methods
     #
     multi method add-directive (Games::Go::AGA::Objects::Directive $directive) {
-        push @!directives, $directive;
+        %!directives{$directive.key.tclc} = $directive;
         self;
     }
     multi method add-directive (Str $key, Str $value) {
-        push @!directives, Games::Go::AGA::Objects::Directive.new(
+        %!directives{$key.tclc} = Games::Go::AGA::Objects::Directive.new(
             key   => $key,
             value => $value,
         );
@@ -46,34 +46,17 @@ class Games::Go::AGA::Objects::Register {
     }
 
     method set-directive (Str $key, Str $value) {
-        my $directive = .get-directive($key);
-        if (defined $directive) {
-            $directive.value($value);
-        }
+        my $directive = %!directives($key.tclc);
+        $directive.value($value) if $directive.defined;
         self;
     }
 
-    multi method get-directive (Int $idx) {
-        @!directives[$idx];
-    }
-
-    multi method get-directive (Str $key) {
-        my $key-uc = $key.uc;
-        for @!directives -> $directive {
-            return $directive.value if ($directive.key eq $key-uc);
-        }
-        return; # undef
+    method get-directive (Str $key) {
+        return %!directives{$key.tclc};
     }
 
     method delete-directive (Str $key) {
-        my $idx = 0;
-        my $key-uc = $key.uc;
-        for @!directives -> $directive {
-            if ($directive.key eq $key-uc) {
-                return @!directives.splice($idx, 1); # delete and return it
-            }
-            $idx++;
-        }
+        %directives{$key.tclc}:delete;
         self;
     }
 
@@ -83,32 +66,17 @@ class Games::Go::AGA::Objects::Register {
     #
     method add-player (Games::Go::AGA::Objects::Player $player) {
         my $id = $player.id;
-        @!players.map({
-            die "Duplicate ID $id" if *.id eq $id;
-        });
-        push @!players, $player;
+        die "Duplicate ID $id" if %!players{id};
+        %players{$id} = $player;
         self;
     }
 
-    multi method get-player (Int $idx) {
-        @!players[$idx];
-    }
-
-    multi method get-player (Str $id) {
-        for @!players -> $player {
-            return $player if ($player.id eq $id);
-        }
-        return; # undef
+    method get-player (AGA-id $id) {
+        %!players{$id};
     }
 
     method delete-player (Str $id) {
-        my $idx = 0;
-        for @!players -> $player {
-            if ($player.id eq $id) {
-                @!players.splice($idx, 1);    # delete and return it
-                last;
-            }
-        }
+        %!players{$id}:delete;
         self;
     }
 

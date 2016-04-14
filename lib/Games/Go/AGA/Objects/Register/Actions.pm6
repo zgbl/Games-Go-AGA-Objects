@@ -30,7 +30,8 @@ class Games::Go::AGA::Objects::Register::Actions {
     method directive ($/) {
 say 'key: ', ~$<key>;
         my $directive = Games::Go::AGA::Objects::Directive.new(
-            key => ~$<key>,
+            key => 'GGG',
+          # key => ~$<key>,
         );
         $directive.set-values(~$<values>) if ~$<values>;
         $directive.set-comment(~$<directive-comment>) if ~$<directive-comment>;

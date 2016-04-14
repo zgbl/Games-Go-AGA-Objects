@@ -26,7 +26,7 @@ my package EXPORT::DEFAULT {
          #  or die 'Invalid Rating (expect -99.99 to -1 or 1 to 9.99)'
     };
     subset Pos-Int of Int where {
-        ($_ > 0)
+        (* > 0)
          #  or die 'expect Int greater than 0'
     };
     subset Result of Str where {
