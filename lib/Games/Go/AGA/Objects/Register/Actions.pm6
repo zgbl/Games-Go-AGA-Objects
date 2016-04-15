@@ -30,10 +30,10 @@ class Games::Go::AGA::Objects::Register::Actions {
     method directive ($/) {
 say 'key: ', ~$<key>;
 say 'value ', ~$<value> if $<value>;
-say 'comment ', $<directive-comment>.perl if $<directive-comment>;
+say 'comment ', ~$<directive-comment> if $<directive-comment>;
         my $directive = Games::Go::AGA::Objects::Directive.new(
-            key => 'GGG',
-          # key => ~$<key>,
+          # key => 'GGG',
+            key => ~$<key>,
         );
         $directive.set-values(~$<values>) if $<values>;
         $directive.set-comment(~$<directive-comment>) if $<directive-comment>;
@@ -46,14 +46,20 @@ say 'comment ', $<directive-comment>.perl if $<directive-comment>;
     }
 
     method player ($/) {
-        say "player: ", $<player>;
+        say "id ", ~$<id>;
+        say "last-name: ",      ~$<last-name>;
+        say "first-name: ",     ~$<first-name>     if $<first-name>;
+        say "flags: ",          ~$<flag>           if $<flag>;
+        say "player-comment: ", ~$<player-comment> if $<player-comment>;
         my $player = Games::Go::AGA::Objects::Player.new(
             id         => ~$<id>,
             last-name  => ~$<last-name>,
+            first-name => $<first-name> ?? ~$<first-name> !! '',
+            flags      => $<flags> ?? ~$<flags> !! '',
+            comment    => $<player-comment> ?? ~$<player-comment> !! '',
         );
-        for < first-name rank rating flags player-comment > -> $key {
-            $player.add-$key(~$<$key>) if ~$<$key>;
-        }
+        $player.set-rank(~$<rank>) if $<rank>;
+        $player.set-rating(+~$<rating>) if $<rating>;
         make $player;
     }
 }

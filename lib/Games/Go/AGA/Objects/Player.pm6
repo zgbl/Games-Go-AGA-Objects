@@ -28,6 +28,9 @@ class Games::Go::AGA::Objects::Player {
         $!normalized-id = $.normalize-id($!id) if not $!normalized-id;
         $!normalized-id;
     }
+    method un-normalized-id { # in case you want your original ID back
+        $.id;
+    }
 
     ######################################
     #
@@ -36,25 +39,17 @@ class Games::Go::AGA::Objects::Player {
     method set-id (AGA-Id $id)              { $!id = $id; $.changed; self};
     method set-last-name (Str $last)        { $!last-name = $last; $.changed; self};
     method set-first-name (Str $first)      { $!first-name = $first; self};
-    method rank {
-        $!rank.defined
-          ?? $!rank
-          !! $.rating-to-rank($!rating);
-    };
+    method rank { $!rank; };
     method set-rank (Str $rank) {
         $!rank = $rank;
-        $!rating = $.rank-to-rating($rank);
+      # $!rating = $.rank-to-rating($rank);
         $.changed;
         self;
     };
-    method rating {
-        $!rating.defined
-          ?? $!rating
-          !! $.rank-to-rating($!rank);
-    };
+    method rating { $!rating };
     method set-rating (Rating $rating)      {
         $!rating = $rating;
-        $!rank = $.rating-to-rank($rating);
+      # $!rank = $.rating-to-rank($rating);
         $.changed;
         self;
     };
@@ -70,10 +65,11 @@ class Games::Go::AGA::Objects::Player {
     #
     # methods
     #
-    method changed { &!change-callback(); self; }
+    method changed { self.&!change-callback(); self; }
 
+    multi method rank-to-rating ( Rating $rating ) { $rating } # already a Rating
     # rank is coarse-grained.  return middle of rating range.
-    method rank-to-rating ( Rank $rank ) {
+    multi method rank-to-rating ( Rank $rank ) {
         return if not $rank.defined;
         $rank ~~ m:i/(\d+)(<[dk]>)/;
         $/[1].uc ~~ 'D'
@@ -81,9 +77,10 @@ class Games::Go::AGA::Objects::Player {
           !! -$/[0] - 0.5;  # kyu from -99.99 to -1
     }
 
-    method rating-to-rank ( Rating $rating ) {
+    multi method rating-to-rank ( Rank $rank ) { $rank }  # already a Rank
+    multi method rating-to-rank ( Rating $rating ) {
         return if not $rating.defined;
-        $rating.Int.abs ~ ($rating > 0 ?? 'D' !! 'K');
+        $rating.Int.abs ~ ($rating >= 0 ?? 'D' !! 'K');
     }
 
     method normalize-id ( Str $id ) {
@@ -100,8 +97,26 @@ class Games::Go::AGA::Objects::Player {
     #
     # other methods
     #
+    method rating-or-rank {
+        $.rating
+          ?? $.rating 
+          !! $.rank;
+    }
 
     method gist {
-        "$!id $!last-name, $!first-name { $!rating || $!rank }";
+say "Player::gist id: ", $.id;
+say "Player::gist last-name: ", $.last-name ~ ',';
+say "Player::gist first-name: ", $.first-name;
+say "Player::gist rating-or-rank: ", $.rating-or-rank || '<no-rank>';
+say "Player::gist flags ", $.flags;
+say "Player::gist comment ", $.comment;
+        (
+            $.id,
+            $.last-name ~ ',',
+            $.first-name     || '',
+            $.rating-or-rank || '<no-rank>',
+            $.flags          || '',
+            $.comment        || '',
+        ).join(' ');
     }
 }

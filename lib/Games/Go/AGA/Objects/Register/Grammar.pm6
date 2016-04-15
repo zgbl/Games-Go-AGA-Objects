@@ -13,7 +13,7 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
     token TOP       {
         ^                             # start of string
             [ ^^                      # start of line within string
-              \s*                     # optional leading whitespace
+              <line-space>*           # optional leading whitespace
                 [                     # group alternation of:
                        <directive>    # directive OR
                     || <line-comment> # comment OR
@@ -26,29 +26,32 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
         $                             # end of string
     }
     token directive      {
-                            '#' '#'+
-                            \s* <key>
-                            [ \s+ <values=.to-end> ]?
-                            [ <directive-comment=.comment> ]?
+                            '#'
+                            '#'+
+                            <line-space>* <key>
+                            [ <line-space>+ <values=.to-end> ]?
+                            [ <line-space>* <directive-comment=.comment> ]?
                          }
         token key        { <key=.word> }
         token to-end     { <-[#\n]>* }
     token line-comment   { [ '#' <-[#]> \N* ] | '#' }    # full-line comment
     token player         {  <id>
-                           \s+ <last-name=.name>
-                          [\s* \, \s* <first-name=.name>]?
-                           \s+ [ <rank>|<rating> ]
-                          [\s+ <flags>]?
-                          [\s* <player-comment=.comment>]?
+                           <line-space>+ <last-name=.name>
+                          [<line-space>* \, <line-space>* <first-name=.name> {say "got first"}]?
+                           <line-space>+ [ <rank>|<rating> ] {say "got rank/rating"}
+                          [<line-space>+ <flags> {say "got flags"}]?
+                          [<line-space>* <player-comment=.comment> {say "got comment"}]?
                          }
         token id         { <alpha>* \d+ }
+        token name       { [ <line-space>* <alpha> \w* ]* }   # alpha followed by alphanums
+        token rank       { \d+ <[dkDK]> }           # like 4k, 6D
+        token rating     { '-'? \d+ \.? \d* }       # signed, decimal number
+        token flags      { <flag>+ }
+        token flag       { <line-space>* <word> [ '=' <alphanum>+ ]? }
+        token comment    { '#' \N* }                # from hash to end of line
         token alpha      { <[\w] - [\d]> }          # alphas without numeric
         token alphanum   { <[\w-]> }                # alphanumerics plus '_' and '-'
         token word       { <alpha> <alphanum>* }    # alpha followed by alphanums (normal words)
-        token name       { [ \s* <alpha> \w* ]* }   # alpha followed by alphanums
-        token rank       { \d+ <[dkDK]> }           # like 4k, 6D
-        token rating     { '-'? \d+ \.? \d* }       # signed, decimal number
-        token flags      { [ \s* <word> [ \=  <alphanum>+ ]? ]* }
-        token comment    { '#' \N* }
+        token line-space { \h }                     # white-space without EOL (horizontal)
     token error     { (\S .*) {say "Error: not directive, comment, or player: $0"} }
 }

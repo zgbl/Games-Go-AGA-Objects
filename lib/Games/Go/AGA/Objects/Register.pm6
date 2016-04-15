@@ -41,12 +41,12 @@ class Games::Go::AGA::Objects::Register {
     }
 
     multi method add-directive (Games::Go::AGA::Objects::Directive $directive) {
-say "add-directive: ", $directive.gist;
+say "Register::add-directive: ", $directive.gist;
         %!directives{$directive.key.tclc} = $directive;
         self;
     }
     multi method add-directive (Str $key, Str $value) {
-say "add-directive (Str Str): $key $value";
+say "Register::add-directive (Str Str): $key $value";
         %!directives{$key.tclc} = Games::Go::AGA::Objects::Directive.new(
             key   => $key,
             value => $value,
@@ -145,15 +145,14 @@ say "add-comment: $comment";
     #   other methods
     #
     method gist {
-        say (
-            @!comments.Str,
-            %!directives.values.map(*.gist);
-            %!players.values.map(*.gist);
-        );
-        (
-            @!comments.Str,
-            %!directives.values.map(*.gist);
-            %!players.values.map(*.gist);
-        ).join("\n");
+        say ( 'test1', 'test2', 'test3' ).join("\n");
+        my @gist;
+        @gist.append(
+            @!comments,
+        ).append(
+            %!directives.values,
+        ).append(
+            %!players.values,
+        ).map( *.gist ).join("\n");
     }
 }

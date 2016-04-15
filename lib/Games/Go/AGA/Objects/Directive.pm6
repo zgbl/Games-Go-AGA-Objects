@@ -12,8 +12,8 @@ class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
     has Str-no-Space $.key is required; # directive name
-    has Str-no-Space @.values;          # zero or more values
-    has Str          $.comment;         # optional comment
+    has Str          @.values;          # zero or more values
+    has Str          $.comment = '';    # optional comment
     has              &.change-callback = method { };
 
     my %booleans = ( Test => 1, Aga_rated => 1 ); # class variable
@@ -107,7 +107,8 @@ class Games::Go::AGA::Objects::Directive {
 
     method gist {
         my $gist = "## $!key ";
-        $gist ~= @!values.join(' ') if @.values;
-        $gist ~= $!comment if $.comment;
+        $gist ~= @!values.join(' '); # if @.values;
+        $gist ~= $!comment; # if $.comment;
+        $gist;
     }
 }
