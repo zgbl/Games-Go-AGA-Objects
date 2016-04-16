@@ -26,10 +26,7 @@ class Games::Go::AGA::Objects::Directive {
     );
 
     method set-change-callback (&ccb) { &!change-callback = &ccb; self };
-    method changed {
-        self.&!change-callback();
-        self;
-    }
+    method changed { self.&!change-callback(); self; }
 
     ######################################
     #
@@ -85,7 +82,7 @@ class Games::Go::AGA::Objects::Directive {
     }
     method comment {
         my $comment = $!comment.subst(/\n.*/, '').trim;
-        $comment = "# $comment" if $comment ne '' and not $comment.match(/ ^ \h* '#'/);
+        $comment = "# $comment" if $comment ne '' and not $comment ~~ / ^ \h* '#'/;
         $comment;
     }
 

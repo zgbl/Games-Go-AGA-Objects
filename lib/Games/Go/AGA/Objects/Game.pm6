@@ -39,7 +39,7 @@ class Games::Go::AGA::Objects::Game {
     #
     # methods
     #
-    method changed { &!change-callback(); self; }
+    method changed { self.&!change-callback(); self; }
 
     method winner {
         return $.white if $.result eq 'w';

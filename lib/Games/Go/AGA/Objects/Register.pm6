@@ -21,12 +21,16 @@ class Games::Go::AGA::Objects::Register {
     has Games::Go::AGA::Objects::Directive %!directives;   # hash by key.tclc
     has Games::Go::AGA::Objects::Player    %!players;      # hash by player.id
     has Str                                @!comments;     # array of strings
+    has                                    &.change-callback = method { };
 
     method BUILD (:@comments, :@directives, :@players) {
         @comments.map( { $.add-comment($_) } );
         @directives.map( { $.add-directive($_) } );
         @players.map( { $.add-player($_) } );
     };
+
+    method set-change-callback ($ccb) { &!change-callback = $ccb };
+    method changed { self.&!change-callback(); self; }
 
     ######################################
     #
@@ -39,14 +43,16 @@ class Games::Go::AGA::Objects::Register {
 
     multi method add-directive (Games::Go::AGA::Objects::Directive $directive) {
         %!directives{$directive.key.tclc} = $directive;
+        say "Register::add-directive TODO: set directive's change-callback?";
         self;
     }
     multi method add-directive (Str $key, Str $value) {
-        %!directives{$key.tclc} = Games::Go::AGA::Objects::Directive.new(
-            key   => $key,
-            value => $value,
+        $.add-directive(
+            Games::Go::AGA::Objects::Directive.new(
+                key   => $key,
+                value => $value,
+            ),
         );
-        self;
     }
 
     method set-directive (Str $key, Str $value) {
@@ -93,7 +99,7 @@ class Games::Go::AGA::Objects::Register {
     #
     #   comment methods
     #
-    # called from Actions:
+    # override default setter
     method comments(Str @comments) {
         @comments.map({ .add-comment(*) });
     }
@@ -101,11 +107,11 @@ class Games::Go::AGA::Objects::Register {
     method add-comment (Str $comment) {
         my @comments = $comment.split("\n");    # multi-line?
         for @comments -> $comment {
-            # ensure every line in comment is actually commented
-            $comment.match(/ ^^ (\s*) ('#'?) (.*) /);
-            push @!comments, $1.Str
-              ?? $comment   # no change
-              !! "$0# $2";
+            # ensure each line is valid comment
+            $comment ~~ / ^^ (\h*) ('#'*) (.*) /;
+            push @!comments, $1 eq '#'
+                  ?? $comment   # no change
+                  !! "$0# $2";
         }
         self;
     }

@@ -15,14 +15,14 @@ class Games::Go::AGA::Objects::Round {
     has Pos-Int $.round-number is required;
     has Games::Go::AGA::Objects::Game @.games;  # games
     has Int     $.next-table-number = 1;
-    has Code    $.change-callback = method { };
+    has         &.change-callback = method { };
 
     ######################################
     #
     # accessors
     #
     method get-round-number { $!round-number };
-    method set-change-callback (Code $ccb) { $!change-callback = $ccb };
+    method set-change-callback ($ccb) { &!change-callback = $ccb };
     method get-next-table-number { $!next-table-number++; }
 
 
@@ -30,7 +30,7 @@ class Games::Go::AGA::Objects::Round {
     #
     # methods
     #
-    method changed { $.($.change-callback)(); self; }
+    method changed { self.&!change-callback(); self; }
 
     method add-game (Int $idx, Games::Go::AGA::Objects::Game $game) {
         @!games.push($game);

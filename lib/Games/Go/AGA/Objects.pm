@@ -1,86 +1,17 @@
 #!/usr/bin/perl
 #===============================================================================
 #      PODNAME:  Games::Go::AGA::Objects
-#     ABSTRACT:  ?????
+#     ABSTRACT:  Objects and parsers for AGA Directive, Player, Game, Round, and Tournament
 #
 #       AUTHOR:  Reid Augustin (REID)
 #        EMAIL:  reid@hellosix.com
-#      CREATED:   
+#      CREATED:  Sat Apr 16 12:32:38 PDT 2016
 #===============================================================================
+use v6;
 
-use 5.008;
-use strict;
-use warnings;
-
-package Games::Go::AGA::Objects;
-
-use open qw( :utf8 :std );  # UTF8 for all files and STDIO
-use IO::File;
-use File::Spec;
-use Readonly;
-use Getopt::Long qw(:config pass_through);
+class Games::Go::AGA::Objects;
 
 our $VERSION = '0.001'; # VERSION
-
-use Exporter 'import';
-our @EXPORT_OK = qw(
-);
-
-__PACKAGE__->run unless caller;     # modulino
-
-sub run {
-    my ($class) = @_;
-
-    my (undef, undef, $myName) = File::Spec->splitpath($0);
-
-    my $dir;            # directory
-    my $filename;       # filename
-    my $verbose;
-
-    exit 0 if (not
-        GetOptions(
-            'dir=s'      => \$dir,
-            'filename=s' => \$filename,
-            'verbose'    => \$verbose,
-        )
-    );
-
-    if (@ARGV and
-        not $dir and
-        -d $ARGV[0]) {
-        $dir = shift @ARGV; # from cmd line even if --<opt> not explicit
-    }
-    if (@ARGV) {
-        die(join(' ', "$myName: don't understand: ", @ARGV));
-    }
-
-    my %opts;
-    $opts{dir}      = $dir if ($dir);
-    $opts{filename} = $filename if ($filename);
-    $opts{verbose}  = $verbose if ($verbose);
-
-    $class->new(%opts);
-}
-
-sub new {
-    my ($class, %opts) = @_;
-
-    my $self = {};
-    bless $self, (ref $class || $class);
-
-    return $self;
-}
-
-sub foo {
-    my ($self, $new) = @_;
-
-    if (@_ > 1) {
-        $self->{foo} = $new;
-    }
-    $self->{foo};
-}
-
-1;
 
 =head1 SYNOPSIS
 
@@ -88,33 +19,30 @@ sub foo {
 
 =head1 DESCRIPTION
 
-Games::Go::AGA::Objects represents...
+Games::Go::AGA::Objects contains a collection of object definitions and
+grammars (parsers) for various items defined by American Go Association
+file formats.
 
-=head2 Methods
+Included are objects for:
 
-=over
+    Directive
+    Player
+    Game
+    Register    ( of comments, Directives and Players )
+    Round       ( list of Games )
+    Tournament  ( Register and a list of Rounds )
+    TDListDB    ( TDList(n).txt in a database format )
 
-=item run
+Register and Round include methods to produce register.tde and Round.tde (1.tde,
+2.tde, etc) files.  Tournament includes a method to produce the result file to send
+to the AGA Ratings coordinator (send-to-AGA).
 
-This module is a modulino, meaning it may be used as a module or as a
-script.  The B<run> method is called when there is no caller and it is used
-as a script.  B<run> parses the command line arguments, 
-calls B<new()> to create the object...
+Also included are Grammars (parsers) which can generate objects directly from
+AGA format files via their corresponding Actions:
 
-=item new( [ options ] );
-
-Creates a new Games::Go::AGA::Objects object.  The following options are available,
-and are also available as accessors:
-
-=over
-
-=item option
-
-=back
-
-=item method()
-
-=back
+    Register::Grammar
+    Round::Grammar
+    TDListDB::Grammar
 
 =head1 SEE ALSO
 
