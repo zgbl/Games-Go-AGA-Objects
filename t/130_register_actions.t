@@ -7,20 +7,28 @@
 ################################################################################
 use v6;
 use Test;
+plan 5;
 
 our $VERSION = '0.001'; # VERSION
 
 use Games::Go::AGA::Objects::Register::Grammar; # associated Grammar
 use Games::Go::AGA::Objects::Register::Actions; #   and Actions
 
-my @texts = (
-#   qq[# comment],
-#   qq[# several\n#\n #comments],
-#   qq[## AGA\n  ## AGB \n#\n# comment\n##AGc with-value \n## abd value # and comment ],
-#   qq[Tmp001 Augustin, Reid  5d Club=PALO BYE Drop3],
-
+my Pair @texts = (
+       qq[# comment]
+    => qq[# comment],
+ 
+       qq[# several\n#\n #comments]
+    => qq[# several\n#\n #comments],
+ 
+       qq[## AGA\n  ## AGB \n#\n# comment\n##AGc with value \n## agd value # and comment ]
+    => qq[#\n# comment\n## AGA\n## AGB\n## AGc with value\n## agd value # and comment],
+ 
+       qq[Tmp001 Augustin, Reid  5d   Club=PALO BYE Drop3   #   what a poser!  ]
+    => qq[TMP1 Augustin, Reid 5D Club=PALO BYE Drop3 #   what a poser!],
+ 
     qq:to/END/
-        ## Tourney  Test Tournament
+        ## Tourney  Test  Tournament
         ## Date  2016/04/05
         ## Rounds  3
         ## AGA 
@@ -30,13 +38,25 @@ my @texts = (
         Tmp011 Augustin, Abc   4k    # with a comment
         USA011 Abc, Abc        4.4 DROP2  # 4 dan
         END
+    =>
+    qq:to/END/
+        # a comment
+        # another comment
+        ## Tourney Test  Tournament
+        ## Date 2016/04/05
+        ## Rounds 3
+        ## AGA
+        TMP1 Augustin, Reid 5D Club=PALO BYE Drop3
+        TMP11 Augustin, Abc 4K # with a comment
+        USA11 Abc, Abc 4.4 DROP2 # 4 dan
+        END
 );
 
-for @texts -> $text {
+for @texts -> $pair {
     my $actions = Games::Go::AGA::Objects::Register::Actions.new();
-    my $register = Games::Go::AGA::Objects::Register::Grammar.parse($text, :actions($actions)).ast;
-    say "register.gist:\n", $register.gist;
-    say '';
+    my $register = Games::Go::AGA::Objects::Register::Grammar.parse($pair.key, :actions($actions)).ast;
+
+    is($register.gist, $pair.value.chomp, 'gist matches');
 }
 
 

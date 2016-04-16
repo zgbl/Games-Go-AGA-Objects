@@ -34,4 +34,7 @@ my package EXPORT::DEFAULT {
         m/^<[wb?]>$/
          #  or die q[expect 'w', 'b', or '?' for Result]
     };
+    subset Comment of Str where {
+        not $_ or m/^ \h* '#' \N* $/
+    }
 }

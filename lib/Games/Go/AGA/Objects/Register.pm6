@@ -23,11 +23,8 @@ class Games::Go::AGA::Objects::Register {
     has Str                                @!comments;     # array of strings
 
     method BUILD (:@comments, :@directives, :@players) {
-        say @comments.elems, " comments: ", @comments;
         @comments.map( { $.add-comment($_) } );
-        say @directives.elems, " directives";
         @directives.map( { $.add-directive($_) } );
-        say @players.elems, " players";
         @players.map( { $.add-player($_) } );
     };
 
@@ -41,12 +38,10 @@ class Games::Go::AGA::Objects::Register {
     }
 
     multi method add-directive (Games::Go::AGA::Objects::Directive $directive) {
-say "Register::add-directive: ", $directive.gist;
         %!directives{$directive.key.tclc} = $directive;
         self;
     }
     multi method add-directive (Str $key, Str $value) {
-say "Register::add-directive (Str Str): $key $value";
         %!directives{$key.tclc} = Games::Go::AGA::Objects::Directive.new(
             key   => $key,
             value => $value,
@@ -56,7 +51,7 @@ say "Register::add-directive (Str Str): $key $value";
 
     method set-directive (Str $key, Str $value) {
         my $directive = %!directives($key.tclc);
-        $directive.value($value) if $directive.defined;
+        $directive.value($value) if $directive.so;
         self;
     }
 
@@ -80,7 +75,7 @@ say "Register::add-directive (Str Str): $key $value";
 
     method add-player (Games::Go::AGA::Objects::Player $player) {
         my $id = $player.id;
-        die "Duplicate ID $id" if %!players{$id};
+        die "Duplicate ID $id" if %!players{$id}.so;
         %!players{$id} = $player;
         self;
     }
@@ -108,7 +103,6 @@ say "Register::add-directive (Str Str): $key $value";
         for @comments -> $comment {
             # ensure every line in comment is actually commented
             $comment.match(/ ^^ (\s*) ('#'?) (.*) /);
-say "add-comment: $comment";
             push @!comments, $1.Str
               ?? $comment   # no change
               !! "$0# $2";
@@ -145,14 +139,13 @@ say "add-comment: $comment";
     #   other methods
     #
     method gist {
-        say ( 'test1', 'test2', 'test3' ).join("\n");
         my @gist;
         @gist.append(
             @!comments,
         ).append(
-            %!directives.values,
+            %!directives.values.sort,
         ).append(
-            %!players.values,
+            %!players.values.sort,
         ).map( *.gist ).join("\n");
     }
 }

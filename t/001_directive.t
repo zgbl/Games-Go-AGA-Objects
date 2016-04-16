@@ -8,62 +8,59 @@
 use v6;
 
 use Test;
+plan 18;
 
 our $VERSION = '0.001'; # VERSION
 
 # use-ok('Games::Go::AGA::Objects::Directive');          # the module under test
 use Games::Go::AGA::Objects::Directive;     # the module under test
-my $dut;
 
 my $dut = Games::Go::AGA::Objects::Directive.new(
     key    => 'Aga-rated',
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Directive');
 is( $dut.key, 'Aga-rated',  q[key is 'Aga-rated']);
-is( $dut.get-values, '',  q[value is '']);
+is( $dut.value, '',  q[value is '']);
 
 $dut = Games::Go::AGA::Objects::Directive.new(
     key    => 'Test',
-    values => 'test_value',
+    value  => 'test_value',
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Directive');
 
 is( $dut.key, 'Test',  q[key is 'Test']);
-is( $dut.get-values, 'test_value',  q[value is 'test_value']);
+is( $dut.value, 'test_value',  q[value is 'test_value']);
 
 $dut = Games::Go::AGA::Objects::Directive.new(
-    key    => 'Test_2',
-    values => qw[ test_value_1 tv_2 TV_4 ],
+    key     => 'Test_2',
+    value   => 'test_value_1 tv_2 TV_4',
+    comment => "a comment\n but discard this part",
 );
 
 my $callback-called;
 $dut.set-change-callback( sub { $callback-called++ } );
 
-is( $dut.key, 'Test_2',  q[key is 'Test_2']);
-is( $dut.values[0], 'test_value_1',  q[first value is 'test_value_1']);
-is( $dut.values[1], 'tv_2',  q[second value is 'tv_2']);
-is( $dut.values[2], 'TV_4',  q[third value is 'TV_4']);
+is($dut.key, 'Test_2',  q[key is 'Test_2']);
+is($dut.value, 'test_value_1 tv_2 TV_4',  q[value is good]);
+is($dut.comment, '# a comment',  q[comment is '# a comment']);
+is($dut.gist, '## Test_2 test_value_1 tv_2 TV_4 # a comment', 'gist is good');
 
-is($dut.booleans, qw[ Aga_rated Test ], 'default booleans');
+is($dut.booleans, < Aga_rated Test >, 'default booleans');
 is($dut.delete-boolean('AGA_RATED').booleans, 'Test', 'delete a boolean');
-is($dut.add-boolean('Foo').booleans, qw[ Foo Test ], 'add a boolean');
+is($dut.add-boolean('foo').booleans, < Foo Test >, 'add a boolean');
+
+is($dut.lists, < Date Online_registration >, 'default lists');
+is($dut.delete-list('Online_registration').lists, 'Date', 'delete a list');
+is($dut.add-list('foo').lists, < Date Foo >, 'add a list');
 
 throws-like(
     {
         $dut = Games::Go::AGA::Objects::Directive.new(
             key    => 'key with spaces',
-            values => 'value',
-        );
-    },
-    X::TypeCheck::Assignment,
-);
-throws-like(
-    {
-        $dut = Games::Go::AGA::Objects::Directive.new(
-            key    => 'key',
-            values => 'value with spaces',
+            value  => 'value',
         );
     },
     X::TypeCheck::Assignment,
 );
 
+is($dut.gist, '## Test_2 test_value_1 tv_2 TV_4 # a comment', 'gist is good');

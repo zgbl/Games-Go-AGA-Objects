@@ -10,22 +10,22 @@ use v6;
 
 class Games::Go::AGA::Objects::Player {
     use Games::Go::AGA::Objects::Types;
-    has Str    $.id is required;  # AGA or tmp ID
+    has Str    $.id is required;    # AGA or tmp ID
     has AGA-Id $!normalized-id;
     has Str    $.last-name is required;
-    has Str    $.first-name;
+    has Str    $.first-name = '';
     has Rank   $.rank;     # like 5D or 4k
     has Rating $.rating;   # like 5.5 or -4.5
-    has Str    $.membership-type;
+    has Str    $.membership-type = '';
     has Date   $.membership-date;
-    has Str    $.state;
-    has Str    $.comment;
+    has Str    $.state = '';
+    has Str    $.comment = '';
     has Num    $.sigma;    # for the calculating ratings
-    has Str    $.flags;    # other flags
-    has        &!change-callback = method { };
+    has Str    $.flags = '';    # other flags
+    has        &.change-callback = method { };
 
     method id { # override accessor to normalize IDs
-        $!normalized-id = $.normalize-id($!id) if not $!normalized-id;
+        $!normalized-id = $.normalize-id($!id) if $!normalized-id.not;
         $!normalized-id;
     }
     method un-normalized-id { # in case you want your original ID back
@@ -41,8 +41,9 @@ class Games::Go::AGA::Objects::Player {
     method set-first-name (Str $first)      { $!first-name = $first; self};
     method rank { $!rank; };
     method set-rank (Str $rank) {
-        $!rank = $rank;
+        $!rank = $rank.uc;
       # $!rating = $.rank-to-rating($rank);
+        $!rating = Nil;
         $.changed;
         self;
     };
@@ -50,6 +51,7 @@ class Games::Go::AGA::Objects::Player {
     method set-rating (Rating $rating)      {
         $!rating = $rating;
       # $!rank = $.rating-to-rank($rating);
+        $!rank = Nil;
         $.changed;
         self;
     };
@@ -70,7 +72,6 @@ class Games::Go::AGA::Objects::Player {
     multi method rank-to-rating ( Rating $rating ) { $rating } # already a Rating
     # rank is coarse-grained.  return middle of rating range.
     multi method rank-to-rating ( Rank $rank ) {
-        return if not $rank.defined;
         $rank ~~ m:i/(\d+)(<[dk]>)/;
         $/[1].uc ~~ 'D'
           ??  $/[0] + 0.5   # dan from 1 to 9.99
@@ -79,7 +80,6 @@ class Games::Go::AGA::Objects::Player {
 
     multi method rating-to-rank ( Rank $rank ) { $rank }  # already a Rank
     multi method rating-to-rank ( Rating $rating ) {
-        return if not $rating.defined;
         $rating.Int.abs ~ ($rating >= 0 ?? 'D' !! 'K');
     }
 
@@ -87,7 +87,7 @@ class Games::Go::AGA::Objects::Player {
         # separate word part from number part,
         # remove leading zeros from digit part
         $id ~~ m:i/(<[a..z_]>+)0*(\d+)/;
-        if not ($/[0].defined and $/[1].defined) {
+        if $/[0].not or $/[1].not {
             die 'ID expects letters followed by digits like Tmp00123';
         }
         $/[0].uc ~ $/[1];
@@ -104,12 +104,6 @@ class Games::Go::AGA::Objects::Player {
     }
 
     method gist {
-say "Player::gist id: ", $.id;
-say "Player::gist last-name: ", $.last-name ~ ',';
-say "Player::gist first-name: ", $.first-name;
-say "Player::gist rating-or-rank: ", $.rating-or-rank || '<no-rank>';
-say "Player::gist flags ", $.flags;
-say "Player::gist comment ", $.comment;
         (
             $.id,
             $.last-name ~ ',',
@@ -117,6 +111,6 @@ say "Player::gist comment ", $.comment;
             $.rating-or-rank || '<no-rank>',
             $.flags          || '',
             $.comment        || '',
-        ).join(' ');
+        ).grep(/./).join(' ');
     }
 }

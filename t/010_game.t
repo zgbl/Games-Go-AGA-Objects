@@ -8,6 +8,7 @@
 use v6;
 
 use Test;
+plan 5;
 
 our $VERSION = '0.001'; # VERSION
 
@@ -33,12 +34,12 @@ my $dut = Games::Go::AGA::Objects::Game.new(
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Game');
 
-is( $dut.black.id, 'Tst22',  q[black ID is 'Tst22']);
+is( $dut.black.id, 'TST22',  q[black ID is 'Tst22']);
 is( $dut.white.last-name, 'Last',  q[white last-name is 'Last']);
 
 my $callback-called;
 $dut.set-change-callback( sub { $callback-called++ } );
 
 $dut.set-result('w');
-is( $dut.winner.id, 'Tst1', 'correct winner ID');
+is( $dut.winner.id, 'TST1', 'correct winner ID');
 is( $callback-called, 1, 'callback called');

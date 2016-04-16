@@ -12,17 +12,20 @@ class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
     has Str-no-Space $.key is required; # directive name
-    has Str          @.values;          # zero or more values
+    has Str          $.value = '';      # the value string, if any
     has Str          $.comment = '';    # optional comment
     has              &.change-callback = method { };
 
-    my %booleans = ( Test => 1, Aga_rated => 1 ); # class variable
-    my %arrays   = (                    # values are an array of items
+    my %booleans = (    # class variable: which keys are boolean
+        Test => 1,
+        Aga_rated => 1
+    );
+    my %lists   = (     # class variable: which keys contain a list of items
         Date => 1,
         Online_registration => 1,
     );
 
-    method set-change-callback (&ccb)       { &!change-callback = &ccb; self };
+    method set-change-callback (&ccb) { &!change-callback = &ccb; self };
     method changed {
         self.&!change-callback();
         self;
@@ -32,72 +35,58 @@ class Games::Go::AGA::Objects::Directive {
     #
     # methods to access/modify the class list of booleans
     #
-    method booleans {
-        %booleans.keys.sort;
-    }
-
-    method is-boolean (Str $key = $!key) {
-        %booleans{$key.tclc};
-    }
-
+    method booleans { %booleans.keys.sort; }
     method add-boolean (Str $key) {
         %booleans{$key.tclc} = 1;
         self;
     }
-
     method delete-boolean (Str $key) {
         %booleans{$key.tclc}:delete;
         self;
     }
+    # is this (or some other) Directive boolean?
+    method is-boolean (Str $key = $!key) { %booleans{$key.tclc}; }
 
     ######################################
     #
-    # methods to access/modify the class list of arrays
+    # methods to access/modify the class list of lists
     #
-    method arrays {
-        %arrays.keys.sort;
-    }
-
-    method is-array (Str $key = $!key) {
-        %arrays{$key.tclc};
-    }
-
-    method add-array (Str $key) {
-        %arrays{$key.tclc} = 1;
+    method lists { %lists.keys.sort; }
+    method add-list (Str $key) {
+        %lists{$key.tclc} = 1;
         self;
     }
-
-    method delete-array (Str $key) {
-        %arrays{$key.tclc}:delete;
+    method delete-list (Str $key) {
+        %lists{$key.tclc}:delete;
         self;
     }
+    # is this (or some other) Directive a list?
+    method is-list (Str $key = $!key) { %lists{$key.tclc}; }
 
     ######################################
     #
-    # set/get the directive values
+    # set/get the directive value
     #
-    multi method set-values (Str $values) {
-        @!values = $values;
+    method set-value (Str $value) {
+        $!value = $value;
         $.changed;
     }
-    multi method set-values (Str @values) {
-        @!values = @values;
-        $.changed;
-    }
-    method get-values {
-        if $.is-array() and @!values.elem == 1 {
-            return @!values[0].split(rx{<[\s,;]>+})
-        }
-        @!values;
+    method value {
+        $!value.subst(/\n.*/, '').trim;
     }
 
     ######################################
     #
-    # set the comment
+    # set/get the comment
     #
     method set-comment (Str $comment) {
         $!comment = $comment;
         $.changed;
+    }
+    method comment {
+        my $comment = $!comment.subst(/\n.*/, '').trim;
+        $comment = "# $comment" if $comment ne '' and not $comment.match(/ ^ \h* '#'/);
+        $comment;
     }
 
     ######################################
@@ -106,9 +95,9 @@ class Games::Go::AGA::Objects::Directive {
     #
 
     method gist {
-        my $gist = "## $!key ";
-        $gist ~= @!values.join(' '); # if @.values;
-        $gist ~= $!comment; # if $.comment;
+        my $gist = "## $!key";
+        $gist ~= " $.value" if $!value ne '';
+        $gist ~= " $.comment" if $.comment ne '';
         $gist;
     }
 }

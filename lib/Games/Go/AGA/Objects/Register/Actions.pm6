@@ -28,35 +28,29 @@ class Games::Go::AGA::Objects::Register::Actions {
         );
     }
     method directive ($/) {
-say 'key: ', ~$<key>;
-say 'value ', ~$<value> if $<value>;
-say 'comment ', ~$<directive-comment> if $<directive-comment>;
         my $directive = Games::Go::AGA::Objects::Directive.new(
           # key => 'GGG',
             key => ~$<key>,
+            value => $<value>.so ?? ~$<value> !! '',
+            comment => $<directive-comment>.so ?? ~$<directive-comment> !! '',
         );
-        $directive.set-values(~$<values>) if $<values>;
-        $directive.set-comment(~$<directive-comment>) if $<directive-comment>;
+        #say "set-value({~$<value>})" if $<value>;
+        #$directive.set-value(~$<value>) if $<value>;
+        #$directive.set-comment(~$<directive-comment>) if $<directive-comment>;
         make $directive;
     }
 
     method line-comment ($/) {
-        say "line-comment: ", $/.Str;
-        make $/.Str;   # simple string
+        make $/.Str.trim;   # simple string, trim leading and trailing whitespace
     }
 
     method player ($/) {
-        say "id ", ~$<id>;
-        say "last-name: ",      ~$<last-name>;
-        say "first-name: ",     ~$<first-name>     if $<first-name>;
-        say "flags: ",          ~$<flag>           if $<flag>;
-        say "player-comment: ", ~$<player-comment> if $<player-comment>;
         my $player = Games::Go::AGA::Objects::Player.new(
             id         => ~$<id>,
-            last-name  => ~$<last-name>,
-            first-name => $<first-name> ?? ~$<first-name> !! '',
-            flags      => $<flags> ?? ~$<flags> !! '',
-            comment    => $<player-comment> ?? ~$<player-comment> !! '',
+            last-name  => ~$<last-name>.trim,
+            first-name => $<first-name> ?? ~$<first-name>.trim !! '',
+            flags      => $<flags> ?? ~$<flags>.trim !! '',
+            comment    => $<player-comment> ?? ~$<player-comment>.trim !! '',
         );
         $player.set-rank(~$<rank>) if $<rank>;
         $player.set-rating(+~$<rating>) if $<rating>;

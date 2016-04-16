@@ -7,7 +7,7 @@
 #      CREATED:  04/07/2016 12:40:28 PM
 #===============================================================================
 use v6;
-use Grammar::Tracer;
+#use Grammar::Tracer;   # include for debug help
 
 grammar Games::Go::AGA::Objects::Register::Grammar {
     token TOP       {
@@ -29,7 +29,7 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
                             '#'
                             '#'+
                             <line-space>* <key>
-                            [ <line-space>+ <values=.to-end> ]?
+                            [ <line-space>+ <value=.to-end> ]?
                             [ <line-space>* <directive-comment=.comment> ]?
                          }
         token key        { <key=.word> }
@@ -37,10 +37,10 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
     token line-comment   { [ '#' <-[#]> \N* ] | '#' }    # full-line comment
     token player         {  <id>
                            <line-space>+ <last-name=.name>
-                          [<line-space>* \, <line-space>* <first-name=.name> {say "got first"}]?
-                           <line-space>+ [ <rank>|<rating> ] {say "got rank/rating"}
-                          [<line-space>+ <flags> {say "got flags"}]?
-                          [<line-space>* <player-comment=.comment> {say "got comment"}]?
+                          [<line-space>* \, <line-space>* <first-name=.name> ]?
+                           <line-space>+ [ <rank>|<rating> ] 
+                          [<line-space>+ <flags> ]?
+                          [<line-space>* <player-comment=.comment> ]?
                          }
         token id         { <alpha>* \d+ }
         token name       { [ <line-space>* <alpha> \w* ]* }   # alpha followed by alphanums

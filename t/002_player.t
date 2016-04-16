@@ -8,10 +8,10 @@
 use v6;
 
 use Test;
+plan 14;
 
 our $VERSION = '0.001'; # VERSION
 
-say 'AbCdEfG'.tclc;
 # use-ok('Games::Go::AGA::Objects::Player');          # the module under test
 use Games::Go::AGA::Objects::Player;     # the module under test
 
@@ -39,12 +39,11 @@ $p = Games::Go::AGA::Objects::Player.new(
     rank       => '5D',
 );
 is( $p.rank, '5D', 'correct rank' );
-is( $p.rating, 5.5, 'correct rating');
 
 my $callback-called;
-$p.set-change-callback( sub { $callback-called++ } );
+$p.set-change-callback( method { $callback-called++ } );
 $p.set-rating(-4.8);
-is( $p.rank, '4K', 'correct rank');
-$p.set-rating(4.8);
+is( $p.rating, -4.8, 'correct rating');
+$p.set-rank('4d');
 is( $p.rank, '4D', 'correct rank');
 is( $callback-called, 2, 'callback called');
