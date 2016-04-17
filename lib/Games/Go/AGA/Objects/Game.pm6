@@ -20,7 +20,7 @@ class Games::Go::AGA::Objects::Game {
     has Result   $.result = '?';     # 'w', 'b', or '?'
     has Rating   $.white-adj;        # adjusted rating as a result of this game
     has Rating   $.black-adj;
-    has          &!change-callback = sub { };
+    has          &.change-callback = method { };
 
     ######################################
     #
@@ -42,14 +42,14 @@ class Games::Go::AGA::Objects::Game {
     method changed { self.&!change-callback(); self; }
 
     method winner {
-        return $.white if $.result eq 'w';
-        return $.black if $.result eq 'b';
+        return $.white if $!result eq 'w';
+        return $.black if $!result eq 'b';
         return;
     }
 
     method loser {
-        return $.black if $.result eq 'w';
-        return $.white if $.result eq 'b';
+        return $.black if $!result eq 'w';
+        return $.white if $!result eq 'b';
         return;
     }
 }

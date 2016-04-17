@@ -32,7 +32,7 @@ class Games::Go::AGA::Objects::Round {
     #
     method changed { self.&!change-callback(); self; }
 
-    method add-game (Int $idx, Games::Go::AGA::Objects::Game $game) {
+    method add-game (Games::Go::AGA::Objects::Game $game) {
         @!games.push($game);
         $.changed;
     }

@@ -38,7 +38,7 @@ is( $dut.black.id, 'TST22',  q[black ID is 'Tst22']);
 is( $dut.white.last-name, 'Last',  q[white last-name is 'Last']);
 
 my $callback-called;
-$dut.set-change-callback( sub { $callback-called++ } );
+$dut.set-change-callback( method { $callback-called++ } );
 
 $dut.set-result('w');
 is( $dut.winner.id, 'TST1', 'correct winner ID');
