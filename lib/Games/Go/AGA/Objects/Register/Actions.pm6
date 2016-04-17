@@ -29,14 +29,10 @@ class Games::Go::AGA::Objects::Register::Actions {
     }
     method directive ($/) {
         my $directive = Games::Go::AGA::Objects::Directive.new(
-          # key => 'GGG',
             key => ~$<key>,
             value => $<value>.so ?? ~$<value> !! '',
             comment => $<directive-comment>.so ?? ~$<directive-comment> !! '',
         );
-        #say "set-value({~$<value>})" if $<value>;
-        #$directive.set-value(~$<value>) if $<value>;
-        #$directive.set-comment(~$<directive-comment>) if $<directive-comment>;
         make $directive;
     }
 
