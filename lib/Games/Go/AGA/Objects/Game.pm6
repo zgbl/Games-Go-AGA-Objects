@@ -10,10 +10,9 @@ use v6;
 
 class Games::Go::AGA::Objects::Game {
     use Games::Go::AGA::Objects::Types;
-    use Games::Go::AGA::Objects::Player;
 
-    has AGA-Id   $.white is required;  # white player
-    has AGA-Id   $.black is required;  # black player
+    has AGA-Id   $.white-id is required;  # ID of white player
+    has AGA-Id   $.black-id is required;  # ID of black player
     has Pos-Int  $.table_number;
     has Pos-Int  $.handicap;
     has Num      $.komi;
@@ -26,14 +25,14 @@ class Games::Go::AGA::Objects::Game {
     #
     # accessors
     #
-    method set-white (Games::Go::AGA::Objects::Player $w) { $!white = $w; $.changed; self; };
-    method set-black (Games::Go::AGA::Objects::Player $b) { $!black = $b; $.changed; self; };
-    method set-handicap (Result $h)   { $!handicap = $h; $.changed; self; };
-    method set-komi (Result $k)       { $!komi = $k; $.changed; self; };
-    method set-result (Result $r)     { $!result = $r; $.changed; self; };
-    method set-white-adj (Rating $w)  { $!white-adj = $w; $.changed; self; };
-    method set-black-adj (Rating $b)  { $!black-adj = $b; $.changed; self; };
-    method set-change-callback (&ccb) { &!change-callback = &ccb; self; };
+    method set-white (AGA-Id $w)      { $!white-id        = $w; $.changed; self; };
+    method set-black (AGA-Id $b)      { $!black-id        = $b; $.changed; self; };
+    method set-handicap (Result $h)   { $!handicap        = $h; $.changed; self; };
+    method set-komi (Result $k)       { $!komi            = $k; $.changed; self; };
+    method set-result (Result $r)     { $!result          = $r; $.changed; self; };
+    method set-white-adj (Rating $w)  { $!white-adj       = $w; $.changed; self; };
+    method set-black-adj (Rating $b)  { $!black-adj       = $b; $.changed; self; };
+    method set-change-callback (&ccb) { &!change-callback = &ccb;          self; };
 
     ######################################
     #
@@ -42,14 +41,14 @@ class Games::Go::AGA::Objects::Game {
     method changed { self.&!change-callback(); self; }
 
     method winner {
-        return $.white if $!result eq 'w';
-        return $.black if $!result eq 'b';
+        return $.white-id if $!result eq 'w';
+        return $.black-id if $!result eq 'b';
         return;
     }
 
     method loser {
-        return $.black if $!result eq 'w';
-        return $.white if $!result eq 'b';
+        return $.black-id if $!result eq 'w';
+        return $.white-id if $!result eq 'b';
         return;
     }
 }

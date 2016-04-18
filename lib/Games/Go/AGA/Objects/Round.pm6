@@ -13,7 +13,7 @@ class Games::Go::AGA::Objects::Round {
     use Games::Go::AGA::Objects::Game;
 
     has Pos-Int $.round-number is required;
-    has Games::Go::AGA::Objects::Game @.games;  # games
+    has Games::Go::AGA::Objects::Game @!games;  # games
     has Int     $.next-table-number = 1;
     has         &.change-callback = method { };
 
@@ -55,8 +55,8 @@ class Games::Go::AGA::Objects::Round {
 
     method idx-of-game (AGA-Id $id_0, AGA-Id $id_1) {
         for @.games -> $game {
-            if ( ($game.white.id eq $id_0 or $game.black.id eq $id_0) and
-                 ($game.white.id eq $id_0 or $game.black.id eq $id_1) ) {
+            if ( ($game.white-id eq $id_0 or $game.black-id eq $id_0) and
+                 ($game.white-id eq $id_1 or $game.black-id eq $id_1) ) {
                 return $game;
             }
         }

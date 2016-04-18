@@ -14,6 +14,7 @@ our $VERSION = '0.001'; # VERSION
 
 # use-ok('Games::Go::AGA::Objects::Round');          # the module under test
 use Games::Go::AGA::Objects::Round;     # the module under test
+use Games::Go::AGA::Objects::Game;      # Rounds contain Games
 
 my $dut = Games::Go::AGA::Objects::Round.new(
     round-number  => 4,
@@ -29,24 +30,22 @@ $dut = Games::Go::AGA::Objects::Round.new(
 );
 $dut.add-game(
     Games::Go::AGA::Objects::Game.new(
-        white => Games::Go::AGA::Objects::Player.new(
-            id         => 'Tst1',
-            last-name  => 'Last1',
-            first-name => 'First 1',
-            rank       => '3d',
-        ),
-        black => Games::Go::AGA::Objects::Player.new(
-            id         => 'Tst22',
-            last-name  => 'Last 2',
-            first-name => 'First 2',
-            rating     => 3.8,
-            club       => 'PALO',
-        ),
+        white-id => 'Tst1',
+        black-id => 'Tst22',
         komi  => 7.5.Num,
+        change-callback => method { $dut.changed },
+    ),
+);
+$dut.add-game(
+    Games::Go::AGA::Objects::Game.new(
+        white-id => 'Tst101',
+        black-id => 'Tst1022',
+        komi  => 0.5.Num,
+        handi => 2,
         change-callback => method { $dut.changed },
     ),
 );
 
 $dut.get-game(0).set-result('w');
-is( $callback-called, 2, 'callback called');
+is( $callback-called, 4, 'callback called');
 
