@@ -7,9 +7,10 @@
 #  CREATED:  04/07/2016 12:40:28 PM
 ################################################################################
 use v6;
+use Games::Go::AGA::Objects::ID_Normalizer_Role;
+use Games::Go::AGA::Objects::Types;
 
-class Games::Go::AGA::Objects::Player {
-    use Games::Go::AGA::Objects::Types;
+class Games::Go::AGA::Objects::Player does Games::Go::AGA::Objects::ID_Normalizer_Role {
     has Str    $.id is required;    # AGA or tmp ID
     has AGA-Id $!normalized-id;
     has Str    $.last-name is required;
@@ -81,16 +82,6 @@ class Games::Go::AGA::Objects::Player {
     multi method rating-to-rank ( Rank $rank ) { $rank }  # already a Rank
     multi method rating-to-rank ( Rating $rating ) {
         $rating.Int.abs ~ ($rating >= 0 ?? 'D' !! 'K');
-    }
-
-    method normalize-id ( Str $id ) {
-        # separate word part from number part,
-        # remove leading zeros from digit part
-        $id ~~ m:i/(<[a..z_]>+)0*(\d+)/;
-        if $/[0].not or $/[1].not {
-            die 'ID expects letters followed by digits like Tmp00123';
-        }
-        $/[0].uc ~ $/[1];
     }
 
     ######################################

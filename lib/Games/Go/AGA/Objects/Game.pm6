@@ -7,12 +7,16 @@
 #  CREATED:  04/07/2016 12:40:28 PM
 ################################################################################
 use v6;
+use Games::Go::AGA::Objects::Types;
+use Games::Go::AGA::Objects::ID_Normalizer_Role;
 
-class Games::Go::AGA::Objects::Game {
-    use Games::Go::AGA::Objects::Types;
+class Games::Go::AGA::Objects::Game
+    does Games::Go::AGA::Objects::ID_Normalizer_Role {
 
     has AGA-Id   $.white-id is required;  # ID of white player
+    has AGA-Id   $.normalized-white-id;
     has AGA-Id   $.black-id is required;  # ID of black player
+    has AGA-Id   $.normalized-black-id;
     has Pos-Int  $.table_number;
     has Pos-Int  $.handicap;
     has Num      $.komi;
@@ -25,6 +29,20 @@ class Games::Go::AGA::Objects::Game {
     #
     # accessors
     #
+    method white-id { # override accessor to normalize IDs
+        $!normalized-white-id = $.normalize-id($!white-id) if $!normalized-white-id.not;
+        $!normalized-white-id;
+    }
+    method un-normalized-white-id { # in case you want your original ID back
+        $.white-id;
+    }
+    method black-id { # override accessor to normalize IDs
+        $!normalized-black-id = $.normalize-id($!black-id) if $!normalized-black-id.not;
+        $!normalized-black-id;
+    }
+    method un-normalized-black-id { # in case you want your original ID back
+        $.black-id;
+    }
     method set-white (AGA-Id $w)      { $!white-id        = $w; $.changed; self; };
     method set-black (AGA-Id $b)      { $!black-id        = $b; $.changed; self; };
     method set-handicap (Result $h)   { $!handicap        = $h; $.changed; self; };

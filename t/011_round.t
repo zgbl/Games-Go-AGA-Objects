@@ -8,7 +8,7 @@
 use v6;
 
 use Test;
-plan 4;
+plan 6;
 
 our $VERSION = '0.001'; # VERSION
 
@@ -47,5 +47,8 @@ $dut.add-game(
 );
 
 $dut.get-game(0).set-result('w');
-is( $callback-called, 4, 'callback called');
+$dut.get-game('Tst1022', 'Tst101').set-result('b');
+is $dut.get-game(0).winner, 'TST1',   'right winner in first game';
+is $dut.get-game(1).loser,  'TST101', 'right loser in second game';
+is $callback-called, 4, 'callback called';
 
