@@ -12,8 +12,8 @@ class Games::Go::AGA::Objects::Game {
     use Games::Go::AGA::Objects::Types;
     use Games::Go::AGA::Objects::Player;
 
-    has Games::Go::AGA::Objects::Player $.white is required;  # white player
-    has Games::Go::AGA::Objects::Player $.black is required;  # black player
+    has AGA-Id   $.white is required;  # white player
+    has AGA-Id   $.black is required;  # black player
     has Pos-Int  $.table_number;
     has Pos-Int  $.handicap;
     has Num      $.komi;
