@@ -13,9 +13,11 @@ our $VERSION = '0.001'; # VERSION
 
 use Games::Go::AGA::Objects::Register;          # the module under test
 
-my @c = ('pre-comment', 'post pre-comment');
 my $register = Games::Go::AGA::Objects::Register.new(
-    comments => @c,
+    comments => (
+        'pre-comment',
+        'post pre-comment',
+    ),
 );
 is($register.get-comments,
     (

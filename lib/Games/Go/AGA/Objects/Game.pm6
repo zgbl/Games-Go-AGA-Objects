@@ -17,9 +17,9 @@ class Games::Go::AGA::Objects::Game
     has AGA-Id   $.normalized-white-id;
     has AGA-Id   $.black-id is required;  # ID of black player
     has AGA-Id   $.normalized-black-id;
-    has Pos-Int  $.table_number;
-    has Pos-Int  $.handicap;
-    has Num      $.komi;
+    has Pos-Int  $.table-number;
+    has Pos-Int  $.handicap = 0;
+    has Rat      $.komi = 7.5;
     has Result   $.result = '?';     # 'w', 'b', or '?'
     has Rating   $.white-adj;        # adjusted rating as a result of this game
     has Rating   $.black-adj;
@@ -30,27 +30,28 @@ class Games::Go::AGA::Objects::Game
     # accessors
     #
     method white-id { # override accessor to normalize IDs
-        $!normalized-white-id = $.normalize-id($!white-id) if $!normalized-white-id.not;
+        $!normalized-white-id = $.normalize-id($!white-id) without $!normalized-white-id;
         $!normalized-white-id;
     }
     method un-normalized-white-id { # in case you want your original ID back
-        $.white-id;
+        $!white-id;
     }
     method black-id { # override accessor to normalize IDs
-        $!normalized-black-id = $.normalize-id($!black-id) if $!normalized-black-id.not;
+        $!normalized-black-id = $.normalize-id($!black-id) without $!normalized-black-id;
         $!normalized-black-id;
     }
     method un-normalized-black-id { # in case you want your original ID back
-        $.black-id;
+        $!black-id;
     }
-    method set-white (AGA-Id $w)      { $!white-id        = $w; $.changed; self; };
-    method set-black (AGA-Id $b)      { $!black-id        = $b; $.changed; self; };
-    method set-handicap (Result $h)   { $!handicap        = $h; $.changed; self; };
-    method set-komi (Result $k)       { $!komi            = $k; $.changed; self; };
-    method set-result (Result $r)     { $!result          = $r; $.changed; self; };
-    method set-white-adj (Rating $w)  { $!white-adj       = $w; $.changed; self; };
-    method set-black-adj (Rating $b)  { $!black-adj       = $b; $.changed; self; };
-    method set-change-callback (&ccb) { &!change-callback = &ccb;          self; };
+    method set-white (AGA-Id $w)         { $!white-id        = $w; $.changed; };
+    method set-black (AGA-Id $b)         { $!black-id        = $b; $.changed; };
+    method set-table-number (Pos-Int $t) { $!table-number    = $t; $.changed; };
+    method set-handicap (Pos-Int $h)     { $!handicap        = $h; $.changed; };
+    method set-komi (Rat $k)             { $!komi            = $k; $.changed; };
+    method set-result (Result $r)        { $!result          = $r; $.changed; };
+    method set-white-adj (Rating $w)     { $!white-adj       = $w; $.changed; };
+    method set-black-adj (Rating $b)     { $!black-adj       = $b; $.changed; };
+    method set-change-callback (&ccb)    { &!change-callback = &ccb; self; };
 
     ######################################
     #
@@ -59,14 +60,39 @@ class Games::Go::AGA::Objects::Game
     method changed { self.&!change-callback(); self; }
 
     method winner {
-        return $.white-id if $!result eq 'w';
-        return $.black-id if $!result eq 'b';
-        return;
+        given $!result {
+            when 'w' {$.white-id};
+            when 'b' {$.black-id};
+        }
     }
 
     method loser {
-        return $.black-id if $!result eq 'w';
-        return $.white-id if $!result eq 'b';
-        return;
+        given $!result {
+            when 'b' {$.white-id};
+            when 'w' {$.black-id};
+        }
+    }
+
+    method gist {
+        my $gist = (
+            $.white-id,
+            $.black-id,
+            $!handicap,
+            $!komi,
+            $!result,
+        ).grep(*.defined).join(' ');
+        with $!table-number or $!white-adj or $!black-adj {
+            $gist ~= ' #';
+            with $!table-number {
+                $gist ~= " Tbl $!table-number";
+            }
+            with $!white-adj or $!black-adj {
+                $gist ~= " adjusted ratings: " ~ (
+                    $!white-adj || '?',
+                    $!black-adj || '?',
+                ).join(', ');
+            }
+        }
+        $gist;
     }
 }

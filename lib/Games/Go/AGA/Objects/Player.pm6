@@ -37,31 +37,27 @@ class Games::Go::AGA::Objects::Player does Games::Go::AGA::Objects::ID_Normalize
     #
     # accessors
     #
-    method set-id (AGA-Id $id)              { $!id = $id; $.changed; self};
-    method set-last-name (Str $last)        { $!last-name = $last; $.changed; self};
-    method set-first-name (Str $first)      { $!first-name = $first; self};
+    method set-id (AGA-Id $id)              { $!id = $id; $.changed; };
+    method set-last-name (Str $last)        { $!last-name = $last; $.changed; };
+    method set-first-name (Str $first)      { $!first-name = $first; $.changed; };
     method rank { $!rank; };
     method set-rank (Str $rank) {
         $!rank = $rank.uc;
-      # $!rating = $.rank-to-rating($rank);
         $!rating = Nil;
         $.changed;
-        self;
     };
     method rating { $!rating };
     method set-rating (Rating $rating)      {
         $!rating = $rating;
-      # $!rank = $.rating-to-rank($rating);
         $!rank = Nil;
         $.changed;
-        self;
     };
-    method set-membership-type (Str $type)  { $!membership-type = $type; $.changed; self; }
-    method set-membership-date (Date $date) { $!membership-date = $date; $.changed; self; }
-    method set-state (Str $state)           { $!state = $state; $.changed; self; }
-    method set-comment (Str $comment)       { $!comment = $comment; $.changed; self; }
-    method set-sigma (Rat $sigma)           { $!sigma = $sigma; $.changed; self; }
-    method set-flags (Str $flags)           { $!flags = $flags; $.changed; self; }
+    method set-membership-type (Str $type)  { $!membership-type = $type; $.changed; }
+    method set-membership-date (Date $date) { $!membership-date = $date; $.changed; }
+    method set-state (Str $state)           { $!state = $state; $.changed; }
+    method set-comment (Str $comment)       { $!comment = $comment; $.changed; }
+    method set-sigma (Rat $sigma)           { $!sigma = $sigma; $.changed; }
+    method set-flags (Str $flags)           { $!flags = $flags; $.changed; }
     method set-change-callback (&ccb)       { &!change-callback = &ccb; self; }
 
     ######################################
@@ -98,10 +94,10 @@ class Games::Go::AGA::Objects::Player does Games::Go::AGA::Objects::ID_Normalize
         (
             $.id,
             $.last-name ~ ',',
-            $.first-name     || '',
+            $.first-name,
             $.rating-or-rank || '<no-rank>',
-            $.flags          || '',
-            $.comment        || '',
+            $.flags,
+            $.comment,
         ).grep(/./).join(' ');
     }
 }

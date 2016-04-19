@@ -8,24 +8,35 @@
 ################################################################################
 use v6;
 
+#| Abstracts a single directive line from AGA register.tde file.
 class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
+    #| The directive key like 'Tourney' or 'Date'
     has Str-no-Space $.key is required; # directive name
+    #|{ The value assigned to the key, format specific to each key.
+       Boolean keys (like AGA-Rated) do not have a value.
+    }
     has Str          $.value = '';      # the value string, if any
+    #| Optional comment.
     has Str          $.comment = '';    # optional comment
+    #|{ Callback method (invoked against the Directive object) called
+       whenever and of the above attributes are changed.  The default
+       is: method { }.
+    }
     has              &.change-callback = method { };
 
-    my %booleans = (    # class variable: which keys are boolean
+    my %booleans = (    #= class variable: which keys are boolean
         Test => 1,
         Aga_rated => 1
     );
-    my %lists   = (     # class variable: which keys contain a list of items
+    my %lists   = (     #= class variable: which keys contain a list of items
         Date => 1,
         Online_registration => 1,
     );
 
     method set-change-callback (&ccb) { &!change-callback = &ccb; self };
+    #| Method to invoke the B<change-callback> attribute.  Returns B<self>.
     method changed { self.&!change-callback(); self; }
 
     ######################################
@@ -81,9 +92,11 @@ class Games::Go::AGA::Objects::Directive {
         $.changed;
     }
     method comment {
-        my $comment = $!comment.subst(/\n.*/, '').trim;
-        $comment = "# $comment" if $comment ne '' and not $comment ~~ / ^ \h* '#'/;
-        $comment;
+        given $!comment.subst(/\n.*/, '').trim-trailing {
+            when ''             { $_ };
+            when m/ ^ \h* '#' / { $_ };
+            default             { "# $_" };
+        }
     }
 
     ######################################

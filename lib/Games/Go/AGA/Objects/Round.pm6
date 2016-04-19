@@ -23,15 +23,13 @@ class Games::Go::AGA::Objects::Round
     #
     # accessors
     #
-    method get-round-number { $!round-number };
     method set-change-callback ($ccb) { &!change-callback = $ccb };
-    method get-next-table-number { $!next-table-number++; }
-
 
     ######################################
     #
     # methods
     #
+    method get-next-table-number { $!next-table-number++; }
     method changed { self.&!change-callback(); self; }
 
     method add-game (Games::Go::AGA::Objects::Game $game) {
@@ -41,15 +39,15 @@ class Games::Go::AGA::Objects::Round
 
     multi method get-game (Int $idx) { @!games[$idx] }
     multi method get-game (AGA-Id $id0, AGA-Id $id1 = $id0) {
-        my $idx = $.idx-of-game($id0, $id1);
-        return @!games[$idx.Int] if $idx.so;
-        return; # undef
+        given $.idx-of-game($id0, $id1) {
+            when .so { @!games[$_] }
+        }
     }
 
     multi method delete-game (Int $idx) { @!games.splice($idx, 1) }
     multi method delete-game (AGA-Id $id0, AGA-Id $id1 = $id0) {
         my $idx = $.idx-of-game($id0, $id1);
-        return if $idx.not;
+        return without $idx;
         my $game = @!games.splice($idx, 1);
         $.changed;
         $game;
@@ -58,13 +56,19 @@ class Games::Go::AGA::Objects::Round
     method idx-of-game (AGA-Id $id0 is copy, AGA-Id $id1 is copy = $id0) {
         $id0 = $.normalize-id($id0);
         $id1 = $.normalize-id($id1);
-        for 0 .. @!games.end -> $idx {
-            my $game = @!games[$idx];
+        for @!games.kv -> $idx, $game {
             if ( ($game.white-id eq $id0 or $game.black-id eq $id0) and
                  ($game.white-id eq $id1 or $game.black-id eq $id1) ) {
                 return $idx;
             }
         }
         return; # undef
+    }
+
+    method gist {
+        (
+            "# Round $!round-number",
+            |@!games>>.gist,
+        ).join("\n");
     }
 }

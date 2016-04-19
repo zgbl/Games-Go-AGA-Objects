@@ -8,7 +8,7 @@
 use v6;
 
 use Test;
-plan 6;
+plan 8;
 
 our $VERSION = '0.001'; # VERSION
 
@@ -32,7 +32,7 @@ $dut.add-game(
     Games::Go::AGA::Objects::Game.new(
         white-id => 'Tst1',
         black-id => 'Tst22',
-        komi  => 7.5.Num,
+        komi  => 7.5,
         change-callback => method { $dut.changed },
     ),
 );
@@ -40,15 +40,17 @@ $dut.add-game(
     Games::Go::AGA::Objects::Game.new(
         white-id => 'Tst101',
         black-id => 'Tst1022',
-        komi  => 0.5.Num,
+        komi  => 0.5,
         handi => 2,
         change-callback => method { $dut.changed },
     ),
 );
+is $dut.gist, "# Round 1\nTST1 TST22 0 7.5 ?\nTST101 TST1022 0 0.5 ?", 'gist OK';
 
 $dut.get-game(0).set-result('w');
 $dut.get-game('Tst1022', 'Tst101').set-result('b');
 is $dut.get-game(0).winner, 'TST1',   'right winner in first game';
-is $dut.get-game(1).loser,  'TST101', 'right loser in second game';
+is $dut.get-game('Tst1022').loser,  'TST101', 'right loser in second game';
 is $callback-called, 4, 'callback called';
+is $dut.gist, "# Round 1\nTST1 TST22 0 7.5 w\nTST101 TST1022 0 0.5 b", 'gist OK';
 
