@@ -7,6 +7,8 @@
 ################################################################################
 use v6;
 
+our $VERSION = '0.001'; # VERSION
+
 unit module Games::Go::AGA::Objects::Types;
 my package EXPORT::DEFAULT {
     subset Str-no-Space of Str where {
@@ -26,6 +28,10 @@ my package EXPORT::DEFAULT {
          #  or die 'Invalid Rating (expect -99.99 to -1 or 1 to 9.99)'
     };
     subset Rating-or-Rank where Rating or Rank;
+    subset Non-Neg-Int of Int where {
+        (* >= 0)
+         #  or die 'expect Int greater than or equal to 0'
+    };
     subset Pos-Int of Int where {
         (* > 0)
          #  or die 'expect Int greater than 0'

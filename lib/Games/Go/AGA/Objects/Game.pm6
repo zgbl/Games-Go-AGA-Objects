@@ -10,20 +10,23 @@ use v6;
 use Games::Go::AGA::Objects::Types;
 use Games::Go::AGA::Objects::ID_Normalizer_Role;
 
+our $VERSION = '0.001'; # VERSION
+
 class Games::Go::AGA::Objects::Game
     does Games::Go::AGA::Objects::ID_Normalizer_Role {
 
-    has AGA-Id   $.white-id is required;  # ID of white player
-    has AGA-Id   $.normalized-white-id;
-    has AGA-Id   $.black-id is required;  # ID of black player
-    has AGA-Id   $.normalized-black-id;
-    has Pos-Int  $.table-number;
-    has Pos-Int  $.handicap = 0;
-    has Rat      $.komi = 7.5;
-    has Result   $.result = '?';     # 'w', 'b', or '?'
-    has Rating   $.white-adj;        # adjusted rating as a result of this game
-    has Rating   $.black-adj;
-    has          &.change-callback = method { };
+    has AGA-Id      $.white-id is required; # ID of white player
+    has AGA-Id      $.black-id is required; # ID of black player
+    has AGA-Id      $.normalized-white-id;
+    has AGA-Id      $.normalized-black-id;
+    has Non-Neg-Int $.table-number;
+    has Non-Neg-Int $.handicap = 0;
+    has Rat         $.komi = 7.5;
+    has Result      $.result = '?';         # 'w', 'b', or '?'
+    has Rating      $.white-adj;            # adjusted rating as a result of this game
+    has Rating      $.black-adj;
+    has Str         $.comment = '';         # optional game comment
+    has             &.change-callback = method { };
 
     ######################################
     #
@@ -52,6 +55,7 @@ class Games::Go::AGA::Objects::Game
     method set-white-adj (Rating $w)     { $!white-adj       = $w; $.changed; };
     method set-black-adj (Rating $b)     { $!black-adj       = $b; $.changed; };
     method set-change-callback (&ccb)    { &!change-callback = &ccb; self; };
+    method set-comment($c)               { $!comment         = $c; $.changes; };
 
     ######################################
     #
@@ -77,9 +81,9 @@ class Games::Go::AGA::Objects::Game
         my $gist = (
             $.white-id,
             $.black-id,
+            $!result,
             $!handicap,
             $!komi,
-            $!result,
         ).grep(*.defined).join(' ');
         with $!table-number or $!white-adj or $!black-adj {
             $gist ~= ' #';

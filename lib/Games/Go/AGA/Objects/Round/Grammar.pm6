@@ -9,6 +9,8 @@
 use v6;
 #use Grammar::Tracer;   # include for debug help
 
+our $VERSION = '0.001'; # VERSION
+
 grammar Games::Go::AGA::Objects::Round::Grammar {
     token TOP       {
         ^                               # start of string
@@ -25,12 +27,12 @@ grammar Games::Go::AGA::Objects::Round::Grammar {
         $                               # end of string
     }
     token game     {
-                      \h* <white-id.=word>
-                      \h+ <black-id.=word>
-                      \h+ <result>
-                      \h+ <handicap>
-                      \h+ <komi>
-                      \h+ <game-comment.=comment>
+                        \h* <white-id=.word>
+                        \h+ <black-id=.word>
+                        \h+ <result>
+                        \h+ <handicap>
+                        \h+ <komi>
+                      [ \h+ <game-comment=.comment> ]?
                    }
     token result   { w|b|W|B|\? }       # game result, white, black, or no-result
     token handicap { \d+ }              # stones of handicap: integer, usually less than 10
@@ -38,4 +40,5 @@ grammar Games::Go::AGA::Objects::Round::Grammar {
     token comment  { '#' \N* }          # from hash to end of line
     token alpha    { <[\w] - [\d]> }    # alphas without numeric
     token alphanum { <[\w-]> }          # alphanumerics plus '_' and '-'
+    token word     { <alpha> <alphanum>* }  # alpha followed by alphanums (normal words)
 }

@@ -11,13 +11,15 @@ use Games::Go::AGA::Objects::Types;
 use Games::Go::AGA::Objects::Game;
 use Games::Go::AGA::Objects::ID_Normalizer_Role;
 
+our $VERSION = '0.001'; # VERSION
+
 class Games::Go::AGA::Objects::Round
     does Games::Go::AGA::Objects::ID_Normalizer_Role {
 
-    has Pos-Int $.round-number is required;
-    has Games::Go::AGA::Objects::Game @!games;  # games
-    has Int     $.next-table-number = 1;
-    has         &.change-callback = method { };
+    has                       Pos-Int $.round-number is required;
+    has Games::Go::AGA::Objects::Game @.games;  # games
+    has                           Int $.next-table-number = 1;
+    has                               &.change-callback = method { };
 
     ######################################
     #

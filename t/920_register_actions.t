@@ -1,5 +1,5 @@
 ################################################################################
-# ABSTRACT:  tests for Games::Go::AGA::Objects::Register::Grammar
+# ABSTRACT:  tests for Games::Go::AGA::Objects::Register::Grammar and Actions
 #
 #   AUTHOR:  Reid Augustin
 #    EMAIL:  reid@hellosix.com

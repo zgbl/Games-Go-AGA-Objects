@@ -8,6 +8,8 @@
 #===============================================================================
 use v6;
 
+our $VERSION = '0.001'; # VERSION
+
 class Games::Go::AGA::Objects::Register::Actions {
     use Games::Go::AGA::Objects::Types;     # include types
     use Games::Go::AGA::Objects::Register;  # Register object contains:

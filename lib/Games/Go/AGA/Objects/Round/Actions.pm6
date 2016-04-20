@@ -8,6 +8,8 @@
 #===============================================================================
 use v6;
 
+our $VERSION = '0.001'; # VERSION
+
 class Games::Go::AGA::Objects::Round::Actions {
     use Games::Go::AGA::Objects::Types;
     use Games::Go::AGA::Objects::Round;
@@ -19,8 +21,9 @@ class Games::Go::AGA::Objects::Round::Actions {
     #
     method TOP ($/) {
        make Games::Go::AGA::Objects::Round.new(
-            comments   => $<line-comment>>>.ast,
-            games      => $<game>>>.ast,
+            round-number => 0,
+            comments     => $<line-comment>>>.ast,
+            games        => $<game>>>.ast,
         );
     }
     method game ($/) {
@@ -28,9 +31,9 @@ class Games::Go::AGA::Objects::Round::Actions {
             white-id => ~$<white-id>,
             black-id => ~$<black-id>,
             result   => ~$<result>,
-            handicap => ~$<handicap>,
-            komi     => ~$<komi>,
-            comment  => $<game-comment>.so ?? ~$<game-comment> !! '',
+            handicap => +$<handicap>,
+            komi     => +$<komi>,
+            comment  => ~$<game-comment>,
         );
     }
 
