@@ -12,25 +12,28 @@ use DBIish;
 our $VERSION = '0.001'; # VERSION
 
 class Games::Go::AGA::Objects::TDListDB;
-    has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt',
     has  Str $!dbdname           = 'tdlistdb.sqlite',
     has  Str $!table-name        = 'tdlist',
-    has  Int $.max-update-errors = 10,
-    has  Str $.raw-filename      = 'TDList.txt',
+    has  Str $!table-name-meta   = 'tdlist-meta',   # currently just latest update time
+    has  Int $.max-update-errors = 10,              # before aborting update
+    has  Str $.raw-filename      = 'TDList.txt',    # file to update from
+    has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt',
+    has      $!fh;
     has Bool $.verbose           = 0,
+    has      &.print-callback    = method { say };
     has      %!sth-lib           = ( # SQL query library
-        select_by_name  => "SELECT * FROM $!table-name WHERE last_name  = ? AND first_name = ?",
-        insert_player   => "INSERT INTO $!table-name ({$.sql_columns}) VALUES ({$.sql_insert_qs})",
-        update_id       => "UPDATE $!table-name SET {$.sql_update_qs} WHERE id = ?",
-        select_id       => "SELECT * FROM $!table-name WHERE id = ?";
+        select_by_name => "SELECT * FROM $!table-name WHERE last_name  = ? AND first_name = ?",
+        insert_player  => "INSERT INTO $!table-name ({$.sql-columns}) VALUES ({$.sql-insert-qs})",
+        update_id      => "UPDATE $!table-name SET {$.sql-update-qs} WHERE id = ?",
+        select_id      => "SELECT * FROM $!table-name WHERE id = ?";
         # get/set DB update time
-        select_time     => "SELECT update_time FROM $!table_name_meta WHERE key = 1",
-        update_time     => "UPDATE $!table_name_meta SET update_time = ? WHERE key = 1",
+        select_time    => "SELECT update_time FROM $!table-name-meta WHERE key = 1",
+        update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
     );
 
-    constant $BUF_MAX  = 4096;
+    constant BUF_MAX  = 4096;   # buffer for when file has no EOLs
 
-    # list the names of the database field columns/subroutines, in order
+    # names and SQL declarations of the database columns, in order
     my @column-sql = (    # SQL for each column creation
         id         => 'VARCHAR NOT NULL PRIMARY KEY',
         last_name  => 'VARCHAR',
@@ -60,35 +63,35 @@ class Games::Go::AGA::Objects::TDListDB;
 
         END
 
-    sub run {   # run as a script
-        my ($class) = @_;
+#   sub run {   # run as a script
+#       my ($class) = @_;
 
-        require Getopt::Long;
-        Getopt::Long.import(qw( :config pass_through ));
+#       require Getopt::Long;
+#       Getopt::Long.import(qw( :config pass_through ));
 
-        exit 0 if (not GetOptions(
-            'tdlist_file=s', => \$raw-filename,   # update from file
-            'sqlite_file=s', => \$dbdname,        # sqlite file
-            'url=s',         => \$url,                          # URL to update from
-            'verbose',       => \$verbose,
-            'help'           => sub { print $usage; exit 0; },
-        ));
+#       exit 0 if (not GetOptions(
+#           'tdlist_file=s', => \$raw-filename,   # update from file
+#           'sqlite_file=s', => \$dbdname,        # sqlite file
+#           'url=s',         => \$url,                          # URL to update from
+#           'verbose',       => \$verbose,
+#           'help'           => sub { print $usage; exit 0; },
+#       ));
 
-        my $tdlist = $class.new( verbose => $verbose );
-        STDOUT.autoflush(1);
+#       my $tdlist = $class.new( verbose => $verbose );
+#       STDOUT.autoflush(1);
 
-        if ($url) {
-            if (uc $url ne 'AGA') {
-                $tdlist.url($url);
-            }
-            $url = $tdlist.url;
-            print "Updating $.dbdname from AGA ($url)\n";
-            $tdlist.update_from_AGA();
-            exit;
-        }
-        print "Updating $.dbdname from file ($.raw-filename)\n";
-        $tdlist.update_from_file($.raw-filename);
-    }
+#       if ($url) {
+#           if (uc $url ne 'AGA') {
+#               $tdlist.url($url);
+#           }
+#           $url = $tdlist.url;
+#           print "Updating $.dbdname from AGA ($url)\n";
+#           $tdlist.update_from_AGA();
+#           exit;
+#       }
+#       print "Updating $.dbdname from file ($.raw-filename)\n";
+#       $tdlist.update_from_file($.raw-filename);
+#   }
 
     method db is cached {
         $!db = DBI.connect(          # connect to your database, create if needed
@@ -120,19 +123,19 @@ class Games::Go::AGA::Objects::TDListDB;
     sub db-schema {
         my ($self) = @_;
 
-        $.db.do("CREATE TABLE IF NOT EXISTS $!table-name ({$.sql_column_types})");
+        $.db.do("CREATE TABLE IF NOT EXISTS $!table-name ({$.sql-column-types})");
         $.db.do(qq:to/END
-            CREATE TABLE IF NOT EXISTS $!table_name_meta (
+            CREATE TABLE IF NOT EXISTS $!table-name-meta (
                 key INTEGER PRIMARY KEY,
                 update_time VARCHAR(12),
             END
         );
 
         $.db.do(qq:to/END
-            INSERT OR IGNORE INTO $!table_name_meta (
+            INSERT OR IGNORE INTO $!table-name-meta (
                 key,
                 update_time,
-            ) VALUES ( 1, 0, 1 )
+            ) VALUES ( 1, 0 )
             END
         );
     }
@@ -165,9 +168,9 @@ class Games::Go::AGA::Objects::TDListDB;
             $!ua = LWP::UserAgent.new;
         }
 
-        $.my_print("Starting $!raw-filename fetch from $!url at {localtime}") if ($!verbose);
+        $.my-print("Starting $!raw-filename fetch from $!url at {localtime}") if ($!verbose);
         $!ua.mirror($!url, $!raw-filename);
-        $.my_print("... fetch done at {localtime}\n") if ($!verbose);
+        $.my-print("... fetch done at {localtime}\n") if ($!verbose);
         $.update_from_file($!raw-filename);
     }
 
@@ -181,37 +184,32 @@ say "update_from_file($filename)";
     method update_from_fh (IO $fh) {
 say "update_from_fh";
         $!fh = $fh;
-        $!oef = 0;
 
         my $actions = Games::Go::AGA::Objects::TDList::Actions.new();
 
-        $.my_print("Starting database update at ", scalar localtime, "\n") if ($!verbose);
+        $.my-print("Starting database update at ", scalar localtime, "\n") if ($!verbose);
 say "Version $VERSION Starting database update at ", scalar localtime, "\n";
+        
         $.db.do('BEGIN');
         my @errors;
-        my $ii = 0;
-        my $ID = $.column_idx('id');
         while (@error.elems < $.max-update-errors) {
-            $ii++;
-            my $line = $.next-line-from-fh;
-            last if ($!oef);
+            last if ($fh.eof);
+            my $line = $fh.get;     # get next line from $fh
             next if ($line.not);
 
-say "Line $ii: $line";
-say '.'  if ($ii %% 10000);
+say "Line {$fh.ins}: $line";
             if ($!verbose) {
-                $.my_print('.')  if ($ii %% 1000);
-                $.my_print("\n") if ($ii %% 40000);
+                $.my-print('.')  if ($fh.ins %% 1000);
+                $.my-print("\n") if ($fh.ins %% 40000);
             }
-            try {   # in case a line crashes, print error but continue
-                #$.my_print("parse $line") if ($!verbose);
+            try {   # in case a line crashes, collect error but continue
 say "parsing...";
                 my $player = Games::Go::AGA::Objects::TDList::Grammar.parse($line, :actions($actions)).ast;
 say "update {$player.id} {$player.last-name}, {$player.first-name}";
-                $.update_player($player);
+                $.check-dup-player($player);
             }
             CATCH {
-                push @errors, $ii => $_;
+                push @errors, $fh.ins => $_;
             }
         }
         $.db.do('COMMIT');  # make sure we do this!
@@ -229,8 +227,7 @@ say 'calling select_by_name';
         $sth.execute($player.last-name, $player.first-name);
 say 'execute complete';
         my $players = $.sth.fetchall_arrayref;
-say 'fetchall_arrayref complete';
-say '   dup player? TODO!'
+say 'fetchall_arrayref complete   dup player? TODO!'
         for $players -> $already {
             if ($already.id eq $player.id) {
                 $update-player($player);
@@ -250,143 +247,32 @@ say 'inserting new record';
         $sth->execute($.player-column-values($player);
     }
 
-
-ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-
-    # file might not have lines.  enforce lines here
-    sub next-line-from-fh {
-        my ($self) = @_;
-
-        my $offset = $.{buf_offset};
-        if ($.{buf_end} - $offset <= 160) {
-            $.get_fh_chunk;
-            $offset = $.{buf_offset};
-        }
-        return if ($offset >= $.{buf_end});
-        my $eol_idx;
-        if ($.{has_lines}) {
-            $eol_idx = index($.{buf}, "\n", $offset);
-            if ($eol_idx < 0) {
-                die "no EOL";       # shouldn't happen
-            }
-        }
-        else {
-            # assume 80 characters per line
-            $eol_idx = $offset + 80;
-            # but not past the end of the buffer
-            $eol_idx = $.{buf_end} if ($eol_idx > $.{buf_end});
-            $eol_idx--;
-        }
-        my $len = $eol_idx - $offset;
-        my $line = substr $.{buf}, $offset, $len;
-        $.{buf_offset} += $len + 1;
-        return $line;
-    }
-
-    sub fh {
-        my ($self, $new) = @_;
-
-        if (@_ > 1) {
-            $.{fh} = $new;
-            delete $.{has_lines};
-            if ($new and ref $new) {
-                $.{buf} = '';
-                $.{buf_offset} = $.{buf_end} = 0;
-                $.get_fh_chunk;
-                $.{has_lines} = (index($.{buf}, "\n") >= 0);
-            }
-        }
-        return $.{fh};
-    }
-
-    sub get_fh_chunk {
-        my ($self) = @_;
-
-        # how much is still left?
-        my $left = $.{buf_end} - $.{buf_offset};
-        # shift unused part of buf down to the beginning
-        substr($.{buf}, 0, $.{buf_offset}, '');
-        # read in a new chunk
-        my $new = read $.fh, $.{buf}, $BUF_MAX - $left, $left;
-        if (not defined $new) {
-            die "Read error: $!";
-        }
-        $.{buf_end} = $left + $new;
-        $.{buf_offset} = 0;
+    # sql columns with SQL types declarations
+    method sql-column-types (Str $joiner = ', ') {
+        @column-sql.kv.join($joiner);
     }
 
     # sql columns (without column types)
-    sub sql_columns {
-        my ($self, $joiner) = @_;
-
-        $joiner = ', ' if (not defined $joiner);
-        return join($joiner,
-            map({ keys %{$_} }
-                @columns,
-                $.extra_columns,
-            ),
-        );
-    }
-
-    # sql columns with column types
-    sub sql_column_types {
-        my ($self, $joiner) = @_;
-
-        $joiner = ', ' if (not defined $joiner);
-
-        return join($joiner,
-            map({join ' ', each %{$_}}
-                @columns,
-                $.extra_columns,
-            ),
-        );
+    method sql-columns (Str $joiner = ', ') {
+        @column-sql.keys.join($joiner);
     }
 
     # '?, ' place-holder question marks for each column,
     #    appropriate for an UPDATE or INSERT query
-    sub sql_update_qs {
-        my ($self, $joiner) = @_;
-
-        $joiner = ', ' if (not defined $joiner);
-
-        return join($joiner,
-            map({ (keys(%{$_}))[0] . ' = ?' }
-                @columns,
-                $.extra_columns,
-            ),
-        );
+    method sql-update-qs (Str $joiner = ', ') {
+        @column-sql.map({$_.key ~ ' = ?'}).join($joiner);
     }
 
     # place-holder question marks for each column,
     #    appropriate for an INSERT query
-    sub sql_insert_qs {
-        my ($self, $joiner) = @_;
-
-        $joiner = ', ' if (not defined $joiner);
-
-        return join($joiner,
-            map({ '?' }     # one question mark per column
-                @columns,
-                $.extra_columns,
-            ),
-        );
+    method sql-update-qs (Str $joiner = ', ') {
+        @column-sql.map('?'}).join($joiner);    # one question mark per column
     }
 
-    sub my_print {
-        my $self = shift;
-
-        $.print_cb.(@_);
-    }
-
-    sub print_cb {
-        my ($self, $new) = @_;
-
-        $.{print_cb} = $new if (@_ > 1);
-        return $.{print_cb} || sub { print @_ };
+    method my-print {
+        $.print_callback.(@_);
     }
 }
-
-
 
 =head1 SYNOPSIS
 
@@ -453,7 +339,7 @@ LWP::UserAgent B<mirror>).
 =item table-name => 'DB_table_name'
 
 The name of the database table.  An additional table (retrievable with
-the B<table_name_meta> read-only accessor) is also created to hold the
+the B<table-name-meta> read-only accessor) is also created to hold the
 table's B<update_time>.
 
 When returning the table name, the value is always metaquoted.
@@ -513,9 +399,9 @@ should be written to take arguments the same way print does.
 
 =back
 
-=item $tdlistdb.my_print( @args )
+=item $tdlistdb.my-print( @args )
 
-Calls the B<my_print> B<callback> with B<@args>.
+Calls B<print-callback> with B<@args>.
 
 =item $tdlistdb.column_idx( [ 'name' ] )
 
@@ -562,25 +448,25 @@ B<update_from_AGA>.  B<$file> may be a file handle, or if it's a
 string, it is the name of the file to open.  May throw an exception on
 various file or formatting errors.
 
-=item $sql = $tdlistdb.sql_columns( [ $joiner ])
+=item $sql = $tdlistdb.sql-columns( [ $joiner ])
 
 Returns SQL suitable for the list of column names, separated by commas
 (or something else if you set a B<$joiner>).  See INSERT and SELECT
 queries.
 
-=item $sql = $tdlistdb.sql_column_types( [ $joiner ])
+=item $sql = $tdlistdb.sql-column-types( [ $joiner ])
 
 Returns SQL suitable for the list of column names followed by the
 column type, separated by commas (or something else if you set a
 B<$joiner>).  See CREATE TABLE queries.
 
-=item $sql = $tdlistdb.sql_update_qs( [ $joiner ])
+=item $sql = $tdlistdb.sql-update-qs( [ $joiner ])
 
 Returns SQL suitable for the list of question-mark ('?') placeholders
 for each column, separated by commas (or something else if you set a
 B<$joiner>).  See UPDATE queries.
 
-=item $sql = $tdlistdb.sql_insert_qs( [ $joiner ])
+=item $sql = $tdlistdb.sql-insert-qs( [ $joiner ])
 
 Returns SQL suitable for the list of "column = ?" placeholders,
 separated by commas (or something else if you set a B<$joiner>).  See

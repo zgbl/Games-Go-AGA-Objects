@@ -1,6 +1,6 @@
 #!/usr/bin/env perl6
 #===============================================================================
-#     ABSTRACT:  perl 6 Actions for Games::Go::AGA::DataObjects::Register
+#     ABSTRACT:  perl 6 Actions for Games::Go::AGA::Objects::Register
 #
 #       AUTHOR:  Reid Augustin
 #        EMAIL:  reid@hellosix.com
@@ -8,14 +8,14 @@
 #===============================================================================
 use v6;
 
-our $VERSION = '0.001'; # VERSION
-
 class Games::Go::AGA::Objects::Register::Actions {
     use Games::Go::AGA::Objects::Types;     # include types
     use Games::Go::AGA::Objects::Register;  # Register object contains:
     use Games::Go::AGA::Objects::Directive; #   Directives and
     use Games::Go::AGA::Objects::Player;    #   Players
                                             #   and comments
+
+    our $VERSION = '0.001'; # VERSION
 
     ######################################
     #

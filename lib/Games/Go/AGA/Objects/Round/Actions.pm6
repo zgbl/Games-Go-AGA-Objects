@@ -1,6 +1,6 @@
 #!/usr/bin/env perl6
 #===============================================================================
-#     ABSTRACT:  perl 6 Actions for Games::Go::AGA::DataObjects::Round
+#     ABSTRACT:  perl 6 Actions for Games::Go::AGA::Objects::Round
 #
 #       AUTHOR:  Reid Augustin
 #        EMAIL:  reid@hellosix.com
@@ -8,11 +8,11 @@
 #===============================================================================
 use v6;
 
-our $VERSION = '0.001'; # VERSION
-
 class Games::Go::AGA::Objects::Round::Actions {
     use Games::Go::AGA::Objects::Types;
     use Games::Go::AGA::Objects::Round;
+
+    our $VERSION = '0.001'; # VERSION
 
     ######################################
     #
