@@ -19,6 +19,7 @@ class Games::Go::AGA::Objects::TDListDB {
     has  Str $.raw-filename      = 'TDList.txt',    # file to update from
     has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt',
     has      $!fh;
+    has      $!dbh;
     has Bool $.verbose           = 0,
     has      &.print-callback    = method { $.say };
     has      %!sth-lib;
@@ -39,7 +40,7 @@ class Games::Go::AGA::Objects::TDListDB {
     my %idx-by-columns = @column-sql.keys.pairs;
     my %columns-by-idx = %idx-by-columns.invert;
 
-    my $usage = qq:to/END       # usage message when run as script
+    my $usage = qq:to/END/;     # usage message when run as script
 
         TDListDB [ -tdlist_file filename ] [ -sqlite_file filename ]
                 [ -url url | AGA ] [ -verbose ] [ -help ]
@@ -84,10 +85,26 @@ class Games::Go::AGA::Objects::TDListDB {
 #       $tdlist.update_from_file($.raw-filename);
 #   }
 
-    method db {
-        without $!db {
-            $!db = DBI.connect(          # connect to your database, create if needed
-                "dbi:SQLite:dbname=$!fname", # DSN: dbi, driver, database file
+    method db-schema {
+        $.dbh.do("CREATE TABLE IF NOT EXISTS $!table-name ({$.sql-column-types})");
+        $.dbh.do( qq:to/END/ );
+            CREATE TABLE IF NOT EXISTS $!table-name-meta (
+                key INTEGER PRIMARY KEY,
+                update_time VARCHAR(20)
+            )
+            END
+        $.dbh.do( qq:to/END/ );
+            INSERT OR IGNORE INTO $!table-name-meta (
+                key,
+                update_time
+            ) VALUES ( 1, 0 )
+            END
+    }
+
+    method dbh {
+        without $!dbh {
+            $!dbh = DBIish.connect(          # connect to your database, create if needed
+                "dbi:SQLite:dbname=$!dbdname", # DSN: dbi, driver, database file
                 "",                          # no user
                 "",                          # no password
                 {
@@ -95,21 +112,21 @@ class Games::Go::AGA::Objects::TDListDB {
                     RaiseError => 1,         # complain if something goes wrong
                 },
             );
-            $!db-schema();  # make sure tables exists
-            $!sth-init();    # initialize sth library
+            $.db-schema;  # make sure tables exists
+            $.sth-init;    # initialize sth library
         }
-        $!db;
+        $!dbh;
     }
 
     # library of statement handles
-    multi method set-sth-lib (Str $name, Str $new) { say "set-sth-lib('$name', '$new')"; %!sth{$name} = $new; }
+    multi method set-sth-lib (Str $name, Str $new) { say "set-sth-lib('$name', '$new')"; %!sth-lib{$name} = $new; }
     multi method sth-lib (Str $name) {
         my $sth = %!sth-lib{$name};
         without ($sth) {
             die("No SQL named $name in sth library\n");
         }
         if ($sth ~~ Str) {
-            $sth = %!sth-lib{$name} = $.db.prepare($sth);
+            $sth = %!sth-lib{$name} = $.dbh.prepare($sth);
         }
         $sth;
     }
@@ -126,50 +143,34 @@ class Games::Go::AGA::Objects::TDListDB {
         ).map({ $.set-sth-lib($_.key, $_.value) });
     }
 
-    method db-schema {
-        $.db.do("CREATE TABLE IF NOT EXISTS $!table-name ({$.sql-column-types})");
-        $.db.do( qq:to/END/ );
-            CREATE TABLE IF NOT EXISTS $!table-name-meta (
-                key INTEGER PRIMARY KEY,
-                update_time VARCHAR(20)
-            )
-            END
-        $.db.do( qq:to/END/ );
-            INSERT OR IGNORE INTO $!table-name-meta (
-                key,
-                update_time
-            ) VALUES ( 1, 0 )
-            END
-    }
-
-    method set-update-time (Int $time = localtime) { $.sth-lib('update_time').execute($time); }
+    method set-update-time (Int $time = time) { $.sth-lib('update_time').execute($time); }
     method update-time {
         my $sth = $.sth-lib('select_time');
         $sth.execute();
-        my $time = $.sth.fetchall_arrayref();
+        my $time = $sth.fetchall_arrayref();
         $time = $time[0][0];
         return $time || 0;
     }
 
     method select_id (Int $id) {
         my $sth = $.sth-lib('select_id');
-        $.sth.execute($id);
+        $sth.execute($id);
         # ID is primary index, so can only be one - fetch into first array
         # element:
-        my ($player) = $.sth.fetchall_arrayref;
-        $player.[$.column_idx('rank')] += 0 if (is_Rating($player.[$.column_idx('rank')]));   # numify ratings
-        $player[0];
+        my $row = $sth.fetchall_hashref;
+        say $row.gist;
     }
 
     method update_from_AGA {
-        if (not $!ua) {
-            $!ua = LWP::UserAgent.new;
-        }
+        die "Sorry, can't fetch from AGA yet";
+        #  if (not $!ua) {
+        #      $!ua = LWP::UserAgent.new;
+        #  }
 
-        $.my-print("Starting $!raw-filename fetch from $!url at {localtime}") if ($!verbose);
-        $!ua.mirror($!url, $!raw-filename);
-        $.my-print("... fetch done at {localtime}\n") if ($!verbose);
-        $.update_from_file($!raw-filename);
+        #  $.my-print("Starting $!raw-filename fetch from $!url at {time}") if ($!verbose);
+        #  $!ua.mirror($!url, $!raw-filename);
+        #  $.my-print("... fetch done at {time}\n") if ($!verbose);
+        #  $.update_from_file($!raw-filename);
     }
 
     method update_from_file (Str $filename = $!raw-filename) {
@@ -185,10 +186,10 @@ say "update_from_fh";
 
         my $actions = Games::Go::AGA::Objects::TDList::Actions.new();
 
-        $.my-print("Starting database update at {localtime}\n") if ($!verbose);
-say "Starting database update at {localtime}\n";
+        $.my-print("Starting database update at {time}\n") if ($!verbose);
+say "Starting database update at {time}\n";
         
-        $.db.do('BEGIN');
+        $.dbh.do('BEGIN');
         my @errors;
         while (@errors.elems < $.max-update-errors) {
             last if ($fh.eof);
@@ -210,9 +211,9 @@ say "update {$player.id} {$player.last-name}, {$player.first-name}";
                 push @errors, $fh.ins => $_;
             }
         }
-        $.db.do('COMMIT');  # make sure we do this!
+        $.dbh.do('COMMIT');  # make sure we do this!
         $.update_time(time);
-say "database update done at {localtime}\n";
+say "database update done at {time}\n";
         if (@errors.elems) {
             die("{@errors.elems} errors - aborting:\n@errors");
         }
@@ -224,7 +225,7 @@ say 'calling select_by_name';
         my $sth = $.sth-lib('select_by_name');
         $sth.execute($player.last-name, $player.first-name);
 say 'execute complete';
-        my $players = $.sth.fetchall_arrayref;
+        my $players = $sth.fetchall_arrayref;
 say 'fetchall_arrayref complete   dup player? TODO!';
         for $players -> $already {
             if ($already.id eq $player.id) {
@@ -267,9 +268,10 @@ say 'inserting new record';
         @column-sql.map('?').join($joiner);    # one question mark per column
     }
 
-    method set-print-callback (&pcb) { &!change-callback = &pcb; self; };
     method my-print (*@a) { self.&!print-callback(@a); self; }
 }
+
+=begin pod
 
 =head1 SYNOPSIS
 
@@ -495,3 +497,4 @@ Online go tournament system.
 
 =back
 
+=end pod
