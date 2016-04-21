@@ -188,7 +188,6 @@ say "update_from_fh";
 
         $.my-print("Starting database update at {time}\n") if ($!verbose);
 say "Starting database update at {time}\n";
-        
         $.dbh.do('BEGIN');
         my @errors;
         while (@errors.elems < $.max-update-errors) {
