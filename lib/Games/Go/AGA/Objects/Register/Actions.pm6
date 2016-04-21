@@ -43,9 +43,9 @@ class Games::Go::AGA::Objects::Register::Actions {
     method player ($/) {
         my $player = Games::Go::AGA::Objects::Player.new(
             id         => ~$<id>,
-            last-name  => ~$<last-name>.trim,
-            first-name => $<first-name> ?? ~$<first-name>.trim !! '',
-            flags      => $<flags> ?? ~$<flags>.trim !! '',
+            last-name  => ~$<last-name>,
+            first-name => $<first-name> ?? ~$<first-name> !! '',
+            flags      => $<flags> ?? ~$<flags> !! '',
             comment    => $<player-comment> ?? ~$<player-comment>.trim !! '',
         );
         $player.set-rank(~$<rank>) if $<rank>;

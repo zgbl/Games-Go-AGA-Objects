@@ -12,8 +12,8 @@ role Games::Go::AGA::Objects::ID_Normalizer_Role {
     method normalize-id ( Str $id ) is export(:DEFAULT) {
         # separate word part from number part,
         # remove leading zeros from digit part
-        if not ($id ~~ m:i/(<[a..z_]>+)0*(\d+)/) {
-            die 'ID expects letters followed by digits like Tmp00123';
+        if not ($id ~~ m:i/(<[a..z_]>*)0*(\d+)/) {
+            die 'ID expects optional letters followed by digits like Tmp00123 or 444';
         }
         $/[0].uc ~ $/[1];
     }

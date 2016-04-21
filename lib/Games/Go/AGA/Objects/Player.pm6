@@ -10,7 +10,8 @@ use v6;
 use Games::Go::AGA::Objects::ID_Normalizer_Role;
 use Games::Go::AGA::Objects::Types;
 
-class Games::Go::AGA::Objects::Player does Games::Go::AGA::Objects::ID_Normalizer_Role {
+class Games::Go::AGA::Objects::Player
+    does Games::Go::AGA::Objects::ID_Normalizer_Role {
     has Str    $.id is required;    # AGA or tmp ID
     has AGA-Id $!normalized-id;
     has Str    $.last-name is required;

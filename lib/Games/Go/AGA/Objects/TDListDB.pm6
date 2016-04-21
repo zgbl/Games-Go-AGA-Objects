@@ -10,17 +10,20 @@ use v6;
 use DBIish;
 
 class Games::Go::AGA::Objects::TDListDB {
+    use Games::Go::AGA::Objects::TDList::Actions;
+    use Games::Go::AGA::Objects::TDList::Grammar;
     use Games::Go::AGA::Objects::Player;
 
-    has  Str $!dbdname           = 'tdlistdb.sqlite',
-    has  Str $!table-name        = 'tdlist',
-    has  Str $!table-name-meta   = 'tdlist-meta',   # currently just latest update time
-    has  Int $.max-update-errors = 10,              # before aborting update
-    has  Str $.raw-filename      = 'TDList.txt',    # file to update from
-    has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt',
+    has  Str $!dbdname           = 'tdlistdb.sqlite';
+    has  Str $!table-name        = 'tdlist';
+    has  Str $!table-name-meta   = 'tdlist-meta';   # currently just latest update time
+    has  Int $.max-update-errors = 10;              # before aborting update
+    has  Str $.raw-filename      = 'TDList.txt';    # file to update from
+    has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt';
     has      $!fh;
     has      $!dbh;
-    has Bool $.verbose           = 0,
+    has      $!actions           = Games::Go::AGA::Objects::TDList::Actions.new;
+    has Bool $.verbose           = False;
     has      &.print-callback    = method { $.say };
     has      %!sth-lib;
 
@@ -103,27 +106,25 @@ class Games::Go::AGA::Objects::TDListDB {
 
     method dbh {
         without $!dbh {
-            $!dbh = DBIish.connect(          # connect to your database, create if needed
-                "dbi:SQLite:dbname=$!dbdname", # DSN: dbi, driver, database file
-                "",                          # no user
-                "",                          # no password
-                {
-                    AutoCommit => 1,
-                    RaiseError => 1,         # complain if something goes wrong
-                },
+            $!dbh = DBIish.connect(     # connect to your database, create if needed
+                'SQLite',               # driver
+                :database<tdlistdb.sqlite>,   # database file
+             #  :AutoCommit,
+             #  :RaiseError,            # complain if something goes wrong
             );
-            $.db-schema;  # make sure tables exists
-            $.sth-init;    # initialize sth library
+            $.db-schema;    # make sure tables exists
+            $.sth-init;     # initialize sth library
         }
         $!dbh;
     }
 
     # library of statement handles
-    multi method set-sth-lib (Str $name, Str $new) { say "set-sth-lib('$name', '$new')"; %!sth-lib{$name} = $new; }
+    multi method add-sth-lib (Str $name, Str $new) { say "add-sth-lib('$name', '$new')"; %!sth-lib{$name} = $new; }
     multi method sth-lib (Str $name) {
+        without $.dbh { }
         my $sth = %!sth-lib{$name};
         without ($sth) {
-            die("No SQL named $name in sth library\n");
+            die("No SQL named $name in sth library");
         }
         if ($sth ~~ Str) {
             $sth = %!sth-lib{$name} = $.dbh.prepare($sth);
@@ -133,14 +134,15 @@ class Games::Go::AGA::Objects::TDListDB {
 
     method sth-init {
         ( # SQL query library
-            select_by_name => "SELECT * FROM $!table-name WHERE last_name  = ? AND first_name = ?",
+            select_by_id   => "SELECT * FROM $!table-name WHERE id = ?",
+            select_by_name => "SELECT * FROM $!table-name WHERE last_name = ? AND first_name = ?",
             insert_player  => "INSERT INTO $!table-name ({$.sql-columns}) VALUES ({$.sql-insert-qs})",
             update_id      => "UPDATE $!table-name SET {$.sql-update-qs} WHERE id = ?",
             select_id      => "SELECT * FROM $!table-name WHERE id = ?";
             # get/set DB update time
             select_time    => "SELECT update_time FROM $!table-name-meta WHERE key = 1",
             update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
-        ).map({ $.set-sth-lib($_.key, $_.value) });
+        ).map({ $.add-sth-lib($_.key, $_.value) });
     }
 
     method set-update-time (Int $time = time) { $.sth-lib('update_time').execute($time); }
@@ -176,24 +178,21 @@ class Games::Go::AGA::Objects::TDListDB {
     method update_from_file (Str $filename = $!raw-filename) {
 say "update_from_file($filename)";
         $!raw-filename = $filename;
-        $.update_from_fh($filename.IO);
+        $.update-from-fh($filename.IO);
         self;
     }
 
-    method update_from_fh (IO $fh) {
-say "update_from_fh";
+    method update-from-fh (IO $fh) {
+say "update-from-fh";
         $!fh = $fh;
-
-        my $actions = Games::Go::AGA::Objects::TDList::Actions.new();
 
         $.my-print("Starting database update at {time}\n") if ($!verbose);
 say "Starting database update at {time}\n";
         $.dbh.do('BEGIN');
         my @errors;
-        while (@errors.elems < $.max-update-errors) {
-            last if ($fh.eof);
-            my $line = $fh.get;     # get next line from $fh
-            next if ($line.not);
+        for $fh.lines -> $line {
+            next if $line.not;    # skip empty line
+            last if @errors.elems >= $.max-update-errors;
 
 say "Line {$fh.ins}: $line";
             if ($!verbose) {
@@ -201,10 +200,7 @@ say "Line {$fh.ins}: $line";
                 $.my-print("\n") if ($fh.ins %% 40000);
             }
             try {   # in case a line crashes, collect error but continue
-say "parsing...";
-                my $player = Games::Go::AGA::Objects::TDList::Grammar.parse($line, :actions($actions)).ast;
-say "update {$player.id} {$player.last-name}, {$player.first-name}";
-                $.check-dup-player($player);
+                $.update-from-line($line);
             }
             CATCH {
                 push @errors, $fh.ins => $_;
@@ -217,6 +213,13 @@ say "database update done at {time}\n";
             die("{@errors.elems} errors - aborting:\n@errors");
         }
         self;
+    }
+
+    method update-from-line (Str $line) {
+say "parsing...";
+        my $player = Games::Go::AGA::Objects::TDList::Grammar.parse($line, :actions($!actions)).ast;
+say "update {$player.gist}";
+        $.check-dup-player($player);
     }
 
     method check-dup-player (Games::Go::AGA::Objects::Player $player) {
@@ -434,7 +437,7 @@ B<update_from_AGA> or B<update_from_file>).
 Returns the array (or ref to array in scalar context) of the player with ID
 equal to 'id_string', or an empty array of 'id_string' is not found.
 
-=item $sth = $tdlistdb.sth('handle_name', [ $DBI::sth ] )
+=item $sth = $tdlistdb.add-sth-lib('handle_name', 'SQL' )
 
 B<Games::Go::AGA::Objects::TDListDB> maintains a small library of prepared DBI
 statement handles, available by name.  You may add to the list, but
@@ -443,13 +446,18 @@ continue working correctly.  The predefined handles are:
 
 =over
 
-=item $tdlistdb.sth('select_by_name').execute('last name', 'first name')
+=item $tdlistdb.sth-lib('select_by_id').execute( id )
 
-Find a player by last name and first name.  Note that the ID is the
+Find a player by AGA ID.  'id' is a number with no alphabetic prefix
+(i.e: not like USA123).
+
+=item $tdlistdb.sth-lib('select_by_name').execute('last name', 'first name')
+
+Find a player by last name and first name.  Note that the 'id' is the
 'PRIMARY KEY' for the database, and that last and first names may not
 be unique.
 
-=item $tdlistdb.sth('insert_player').execute(@new_column_values)
+=item $tdlistdb.sth-lib('insert_player').execute(@new_column_values)
 
 Add a new player to the database.  @new_column_values are values for all
 the columns.
@@ -457,7 +465,7 @@ the columns.
 Returns the @new_column_values array (or a reference to it in scalar
 context), with the new ID if it was set.
 
-=item $tdlistdb.sth('update_id').execute(@new_column_values, 'ID')
+=item $tdlistdb.sth-lib('update_id').execute(@new_column_values, 'ID')
 
 Update a player already in the database.  @new_column_values are values for
 all the columns, and ID is the player's
@@ -465,16 +473,16 @@ unique ID.  Note that a new ID is also in the @new_column_values.  These
 should differ only under exceptional circumstances, such as if a TMP player
 gets a real AGA ID.
 
-=item $tdlistdb.sth('select_id').execute('ID');
+=item $tdlistdb.sth-lib('select_id').execute('ID');
 
 Find a player by ID.  Note that the ID is the 'PRIMARY KEY' for the
 database, so this query will return only one record.
 
-=item $tdlistdb.sth('select_time').execute();
+=item $tdlistdb.sth-lib('select_time').execute();
 
 Get the current database update time (but use B<update_time()> instead).
 
-=item $tdlistdb.sth('update_time').execute($new);
+=item $tdlistdb.sth-lib('update_time').execute($new);
 
 Set the current database update time (but use B<update_time($new)> instead).
 

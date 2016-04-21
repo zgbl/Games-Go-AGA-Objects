@@ -15,7 +15,7 @@ my package EXPORT::DEFAULT {
          #  or die 'no spaces allowed'
     };
     subset AGA-Id of Str where {
-        m/^<[A..Za..z]>+ <[1..9]>+\d*$/
+        m/^<[A..Za..z]>* <[1..9]>+\d*$/
          #  or die 'Invalid AGA ID (try .normalize-id?)'
     };
     subset Rank of Str where {
