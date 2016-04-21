@@ -9,9 +9,9 @@ use v6;
 
 use DBIish;
 
-our $VERSION = '0.001'; # VERSION
+class Games::Go::AGA::Objects::TDListDB {
+    use Games::Go::AGA::Objects::Player;
 
-class Games::Go::AGA::Objects::TDListDB;
     has  Str $!dbdname           = 'tdlistdb.sqlite',
     has  Str $!table-name        = 'tdlist',
     has  Str $!table-name-meta   = 'tdlist-meta',   # currently just latest update time
@@ -20,16 +20,8 @@ class Games::Go::AGA::Objects::TDListDB;
     has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt',
     has      $!fh;
     has Bool $.verbose           = 0,
-    has      &.print-callback    = method { say };
-    has      %!sth-lib           = ( # SQL query library
-        select_by_name => "SELECT * FROM $!table-name WHERE last_name  = ? AND first_name = ?",
-        insert_player  => "INSERT INTO $!table-name ({$.sql-columns}) VALUES ({$.sql-insert-qs})",
-        update_id      => "UPDATE $!table-name SET {$.sql-update-qs} WHERE id = ?",
-        select_id      => "SELECT * FROM $!table-name WHERE id = ?";
-        # get/set DB update time
-        select_time    => "SELECT update_time FROM $!table-name-meta WHERE key = 1",
-        update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
-    );
+    has      &.print-callback    = method { $.say };
+    has      %!sth-lib;
 
     constant BUF_MAX  = 4096;   # buffer for when file has no EOLs
 
@@ -43,7 +35,6 @@ class Games::Go::AGA::Objects::TDListDB;
         date       => 'VARCHAR',
         club       => 'VARCHAR',
         state      => 'VARCHAR',
-        extra      => 'VARCHAR',
     );
     my %idx-by-columns = @column-sql.keys.pairs;
     my %columns-by-idx = %idx-by-columns.invert;
@@ -93,22 +84,25 @@ class Games::Go::AGA::Objects::TDListDB;
 #       $tdlist.update_from_file($.raw-filename);
 #   }
 
-    method db is cached {
-        $!db = DBI.connect(          # connect to your database, create if needed
-            "dbi:SQLite:dbname=$!fname", # DSN: dbi, driver, database file
-            "",                          # no user
-            "",                          # no password
-            {
-                AutoCommit => 1,
-                RaiseError => 1,         # complain if something goes wrong
-            },
-        )
-        $!db-schema();   # make sure tables exists
+    method db {
+        without $!db {
+            $!db = DBI.connect(          # connect to your database, create if needed
+                "dbi:SQLite:dbname=$!fname", # DSN: dbi, driver, database file
+                "",                          # no user
+                "",                          # no password
+                {
+                    AutoCommit => 1,
+                    RaiseError => 1,         # complain if something goes wrong
+                },
+            );
+            $!db-schema();  # make sure tables exists
+            $!sth-init();    # initialize sth library
+        }
         $!db;
     }
 
     # library of statement handles
-    multi method set-sth-lib (Str $name, $new) { %!sth{$name} = $new; }
+    multi method set-sth-lib (Str $name, Str $new) { say "set-sth-lib('$name', '$new')"; %!sth{$name} = $new; }
     multi method sth-lib (Str $name) {
         my $sth = %!sth-lib{$name};
         without ($sth) {
@@ -120,27 +114,35 @@ class Games::Go::AGA::Objects::TDListDB;
         $sth;
     }
 
-    sub db-schema {
-        my ($self) = @_;
-
-        $.db.do("CREATE TABLE IF NOT EXISTS $!table-name ({$.sql-column-types})");
-        $.db.do(qq:to/END
-            CREATE TABLE IF NOT EXISTS $!table-name-meta (
-                key INTEGER PRIMARY KEY,
-                update_time VARCHAR(12),
-            END
-        );
-
-        $.db.do(qq:to/END
-            INSERT OR IGNORE INTO $!table-name-meta (
-                key,
-                update_time,
-            ) VALUES ( 1, 0 )
-            END
-        );
+    method sth-init {
+        ( # SQL query library
+            select_by_name => "SELECT * FROM $!table-name WHERE last_name  = ? AND first_name = ?",
+            insert_player  => "INSERT INTO $!table-name ({$.sql-columns}) VALUES ({$.sql-insert-qs})",
+            update_id      => "UPDATE $!table-name SET {$.sql-update-qs} WHERE id = ?",
+            select_id      => "SELECT * FROM $!table-name WHERE id = ?";
+            # get/set DB update time
+            select_time    => "SELECT update_time FROM $!table-name-meta WHERE key = 1",
+            update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
+        ).map({ $.set-sth-lib($_.key, $_.value) });
     }
 
-    method set-update-time (Int $time = localtime) { $.sth-lib('update_time').execute($new); }
+    method db-schema {
+        $.db.do("CREATE TABLE IF NOT EXISTS $!table-name ({$.sql-column-types})");
+        $.db.do( qq:to/END/ );
+            CREATE TABLE IF NOT EXISTS $!table-name-meta (
+                key INTEGER PRIMARY KEY,
+                update_time VARCHAR(20)
+            )
+            END
+        $.db.do( qq:to/END/ );
+            INSERT OR IGNORE INTO $!table-name-meta (
+                key,
+                update_time
+            ) VALUES ( 1, 0 )
+            END
+    }
+
+    method set-update-time (Int $time = localtime) { $.sth-lib('update_time').execute($time); }
     method update-time {
         my $sth = $.sth-lib('select_time');
         $sth.execute();
@@ -150,8 +152,6 @@ class Games::Go::AGA::Objects::TDListDB;
     }
 
     method select_id (Int $id) {
-        my ($self, $id) = @_;
-
         my $sth = $.sth-lib('select_id');
         $.sth.execute($id);
         # ID is primary index, so can only be one - fetch into first array
@@ -161,9 +161,7 @@ class Games::Go::AGA::Objects::TDListDB;
         $player[0];
     }
 
-    sub update_from_AGA {
-        my ($self) = @_;
-
+    method update_from_AGA {
         if (not $!ua) {
             $!ua = LWP::UserAgent.new;
         }
@@ -177,7 +175,7 @@ class Games::Go::AGA::Objects::TDListDB;
     method update_from_file (Str $filename = $!raw-filename) {
 say "update_from_file($filename)";
         $!raw-filename = $filename;
-        $.update_from_fh($filename.IO); }
+        $.update_from_fh($filename.IO);
         self;
     }
 
@@ -187,12 +185,12 @@ say "update_from_fh";
 
         my $actions = Games::Go::AGA::Objects::TDList::Actions.new();
 
-        $.my-print("Starting database update at ", scalar localtime, "\n") if ($!verbose);
-say "Version $VERSION Starting database update at ", scalar localtime, "\n";
+        $.my-print("Starting database update at {localtime}\n") if ($!verbose);
+say "Starting database update at {localtime}\n";
         
         $.db.do('BEGIN');
         my @errors;
-        while (@error.elems < $.max-update-errors) {
+        while (@errors.elems < $.max-update-errors) {
             last if ($fh.eof);
             my $line = $fh.get;     # get next line from $fh
             next if ($line.not);
@@ -215,8 +213,8 @@ say "update {$player.id} {$player.last-name}, {$player.first-name}";
         $.db.do('COMMIT');  # make sure we do this!
         $.update_time(time);
 say "database update done at {localtime}\n";
-        if (@error.elems) {
-            die("{@error.elems} errors - aborting:\n@errors");
+        if (@errors.elems) {
+            die("{@errors.elems} errors - aborting:\n@errors");
         }
         self;
     }
@@ -227,10 +225,10 @@ say 'calling select_by_name';
         $sth.execute($player.last-name, $player.first-name);
 say 'execute complete';
         my $players = $.sth.fetchall_arrayref;
-say 'fetchall_arrayref complete   dup player? TODO!'
+say 'fetchall_arrayref complete   dup player? TODO!';
         for $players -> $already {
             if ($already.id eq $player.id) {
-                $update-player($player);
+                $.update-player($player);
                 return self;
             }
             # TODO check/report other dups
@@ -244,7 +242,7 @@ say 'inserting new record';
     # ID is already in database, do an update
     method update-player (Games::Go::AGA::Objects::Player $player) {
         my $sth = $.sth-lib('update_id');
-        $sth->execute($.player-column-values($player);
+        $sth.execute($.player-column-values($player));
     }
 
     # sql columns with SQL types declarations
@@ -265,13 +263,12 @@ say 'inserting new record';
 
     # place-holder question marks for each column,
     #    appropriate for an INSERT query
-    method sql-update-qs (Str $joiner = ', ') {
-        @column-sql.map('?'}).join($joiner);    # one question mark per column
+    method sql-insert-qs (Str $joiner = ', ') {
+        @column-sql.map('?').join($joiner);    # one question mark per column
     }
 
-    method my-print {
-        $.print_callback.(@_);
-    }
+    method set-print-callback (&pcb) { &!change-callback = &pcb; self; };
+    method my-print (*@a) { self.&!print-callback(@a); self; }
 }
 
 =head1 SYNOPSIS
@@ -346,50 +343,6 @@ When returning the table name, the value is always metaquoted.
 
 The default table name is 'tdlistn'.
 
-=item extra_columns => [ {column_name => column_TYPE}, ... ]
-
-If you need extra columns in the database, add the names/column types here.
-They are used only in the creation of the table schema if the database doesn't
-already exist.  The default columns are:
-
-    {last_name  => 'VARCHAR(256)'        },
-    {first_name => 'VARCHAR(256)'        },
-    {id         => 'INTEGER PRIMARY KEY' },
-    {membership => 'VARCHAR(256)'        },
-    {rank       => 'VARCHAR(256)'        },
-    {date       => 'VARCHAR(256)'        },
-    {club       => 'VARCHAR(256)'        },
-    {state      => 'VARCHAR(256)'        },
-    {extra      => 'VARCHAR(256)'        },
-
-which are the columns found in TDList.txt from the AGA.  When defining
-extra columns, take care to set a proper SQL column type and not to overlap
-these existing names.
-
-To fill in these extra columns, you might want to use:
-
-=item extra_columns_callback => sub { ...; return @column_values; }
-
-This callback is called for each record added (or updated) to the database
-during B<update_from_AGA> or B<update_from_file>. It is called with the
-object pointer, and a ref to an array containing the values of the default
-columns as listed above.  It should return an array of the values for the
-extra columns in the same order as given in B<extra_columns>.
-Alternatively, it can directly append those values onto the passed in array
-ref.
-
-    extra_columns          => [ 'rank_range' ], # name(s) for the extra column(s)
-    extra_columns_callback => sub {
-        my ($self, $columns) = @_;
-        # add extra column indicating Dan or kyu
-        return '' if not $columns.[$self.column_idx('rank')];
-        return 'Dan' if Rank_to_Rating( $columns.[$self.column_idx('rank')] ) > 0;
-        return 'Kyu';
-    }
-
-This function should always return exactly the number of extra columns defined in
-the extra_columns option - the returned value may be the empty string ('').
-
 =item $tdlistdb.print_cb( [ \&callback ]
 
 Set/get the print callback.  Whenever something is to be printed, the
@@ -430,8 +383,6 @@ These are the default columns by name:
 =item club
 
 =item state
-
-=item extra
 
 =back
 
@@ -500,7 +451,7 @@ be unique.
 =item $tdlistdb.sth('insert_player').execute(@new_column_values)
 
 Add a new player to the database.  @new_column_values are values for all
-the columns, both built-in and B<extra_columns>.
+the columns.
 
 Returns the @new_column_values array (or a reference to it in scalar
 context), with the new ID if it was set.
@@ -508,7 +459,7 @@ context), with the new ID if it was set.
 =item $tdlistdb.sth('update_id').execute(@new_column_values, 'ID')
 
 Update a player already in the database.  @new_column_values are values for
-all the columns, both built-in and B<extra_columns>, and ID is the player's
+all the columns, and ID is the player's
 unique ID.  Note that a new ID is also in the @new_column_values.  These
 should differ only under exceptional circumstances, such as if a TMP player
 gets a real AGA ID.

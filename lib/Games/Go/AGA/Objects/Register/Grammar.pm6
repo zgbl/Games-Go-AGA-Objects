@@ -9,8 +9,6 @@
 use v6;
 #use Grammar::Tracer;   # include for debug help
 
-our $VERSION = '0.001'; # VERSION
-
 grammar Games::Go::AGA::Objects::Register::Grammar {
     token TOP       {
         ^                             # start of string

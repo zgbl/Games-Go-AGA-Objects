@@ -7,9 +7,7 @@
 ################################################################################
 use v6;
 use Test;
-plan 5;
-
-our $VERSION = '0.001'; # VERSION
+plan 1;
 
 use Games::Go::AGA::Objects::Round::Grammar; # associated Grammar
 use Games::Go::AGA::Objects::Round::Actions; #   and Actions

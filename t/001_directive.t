@@ -10,8 +10,6 @@ use v6;
 use Test;
 plan 23;
 
-our $VERSION = '0.001'; # VERSION
-
 # use-ok('Games::Go::AGA::Objects::Directive');          # the module under test
 use Games::Go::AGA::Objects::Directive;     # the module under test
 

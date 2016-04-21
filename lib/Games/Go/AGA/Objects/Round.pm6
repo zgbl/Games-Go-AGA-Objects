@@ -11,7 +11,6 @@ use Games::Go::AGA::Objects::Types;
 use Games::Go::AGA::Objects::Game;
 use Games::Go::AGA::Objects::ID_Normalizer_Role;
 
-our $VERSION = '0.001'; # VERSION
 
 class Games::Go::AGA::Objects::Round
     does Games::Go::AGA::Objects::ID_Normalizer_Role {

@@ -18,6 +18,7 @@ use Games::Go::AGA::Objects::Player;
 #   Games::Go::AGA::Objects::Register::Grammar.parse($string, :actions($register));
 # Alternatively, make a 'new' one and use add-* methods to populate
 class Games::Go::AGA::Objects::Register {
+
     has Games::Go::AGA::Objects::Directive %!directives;   # hash by key.tclc
     has Games::Go::AGA::Objects::Player    %!players;      # hash by player.id
     has Str                                @!comments;     # array of strings

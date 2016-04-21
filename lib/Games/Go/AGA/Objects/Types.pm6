@@ -7,9 +7,8 @@
 ################################################################################
 use v6;
 
-our $VERSION = '0.001'; # VERSION
-
 unit module Games::Go::AGA::Objects::Types;
+
 my package EXPORT::DEFAULT {
     subset Str-no-Space of Str where {
         m/^\S*$/

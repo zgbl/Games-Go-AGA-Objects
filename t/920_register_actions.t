@@ -9,8 +9,6 @@ use v6;
 use Test;
 plan 5;
 
-our $VERSION = '0.001'; # VERSION
-
 use Games::Go::AGA::Objects::Register::Grammar; # associated Grammar
 use Games::Go::AGA::Objects::Register::Actions; #   and Actions
 

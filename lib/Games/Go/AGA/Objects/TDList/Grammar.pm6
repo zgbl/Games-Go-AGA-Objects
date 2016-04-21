@@ -10,8 +10,6 @@ use v6;
 #use Grammar::Tracer;   # include for debug help
 
 grammar Games::Go::AGA::Objects::Round::Grammar {
-    our $VERSION = '0.001'; # VERSION
-
     token TOP {
         ^                           # start of string
             [                       # group alternation of:

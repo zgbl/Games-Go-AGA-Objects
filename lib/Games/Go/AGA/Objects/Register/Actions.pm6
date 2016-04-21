@@ -15,8 +15,6 @@ class Games::Go::AGA::Objects::Register::Actions {
     use Games::Go::AGA::Objects::Player;    #   Players
                                             #   and comments
 
-    our $VERSION = '0.001'; # VERSION
-
     ######################################
     #
     # 'action object' methods - construct G::G::A::O::Register directly

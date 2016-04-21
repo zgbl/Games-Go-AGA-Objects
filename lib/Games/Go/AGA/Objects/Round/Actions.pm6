@@ -12,8 +12,6 @@ class Games::Go::AGA::Objects::Round::Actions {
     use Games::Go::AGA::Objects::Types;
     use Games::Go::AGA::Objects::Round;
 
-    our $VERSION = '0.001'; # VERSION
-
     ######################################
     #
     # 'action object' methods - construct G::G::A::O::Round directly

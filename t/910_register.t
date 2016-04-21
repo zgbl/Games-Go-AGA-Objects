@@ -9,8 +9,6 @@ use v6;
 use Test;
 plan 3;
 
-our $VERSION = '0.001'; # VERSION
-
 use Games::Go::AGA::Objects::Register;          # the module under test
 
 my $register = Games::Go::AGA::Objects::Register.new(

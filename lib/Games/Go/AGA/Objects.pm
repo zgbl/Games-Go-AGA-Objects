@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl6
 #===============================================================================
 #      PODNAME:  Games::Go::AGA::Objects
 #     ABSTRACT:  Objects and parsers for AGA Directive, Player, Game, Round, and Tournament
@@ -9,9 +9,8 @@
 #===============================================================================
 use v6;
 
-class Games::Go::AGA::Objects;
-
-our $VERSION = '0.001'; # VERSION
+class Games::Go::AGA::Objects {
+}
 
 =head1 SYNOPSIS
 

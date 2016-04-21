@@ -10,8 +10,6 @@ use v6;
 use Games::Go::AGA::Objects::Types;
 use Games::Go::AGA::Objects::ID_Normalizer_Role;
 
-our $VERSION = '0.001'; # VERSION
-
 class Games::Go::AGA::Objects::Game
     does Games::Go::AGA::Objects::ID_Normalizer_Role {
 
