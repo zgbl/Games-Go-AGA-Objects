@@ -14,34 +14,30 @@ class Games::Go::AGA::Objects::TDListDB {
     use Games::Go::AGA::Objects::TDList::Grammar;
     use Games::Go::AGA::Objects::Player;
 
-    has  Str $!dbdname           = 'tdlistdb.sqlite';
-    has  Str $!table-name        = 'tdlist';
-    has  Str $!table-name-meta   = 'tdlist-meta';   # currently just latest update time
-    has  Int $.max-update-errors = 10;              # before aborting update
-    has  Str $.raw-filename      = 'TDList.txt';    # file to update from
+    has      $.dbh;                                 # initialized in method $.dbh or $.sth-lib
+    has  Str $.db-filename       = 'tdlistdb.sqlite';
+    has  Str $.table-name        = 'tdlist';
+    has  Str $.table-name-meta   = 'tdlist-meta';   # currently just latest update time
+    has  Str $.tdlist-filename   = 'TDList.txt';    # file to update from
     has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt';
-    has      $!fh;
-    has      $!dbh;
-    has      $!actions           = Games::Go::AGA::Objects::TDList::Actions.new;
+    has  Int $.max-update-errors = 10;              # before aborting update
+    has      $.actions           = Games::Go::AGA::Objects::TDList::Actions.new;
     has Bool $.verbose           = False;
     has      &.print-callback    = method { $.say };
+    has      $!fh;
     has      %!sth-lib;
 
-    constant BUF_MAX  = 4096;   # buffer for when file has no EOLs
-
     # names and SQL declarations of the database columns, in order
-    my @column-sql = (    # SQL for each column creation
-        id         => 'VARCHAR NOT NULL PRIMARY KEY',
-        last_name  => 'VARCHAR',
-        first_name => 'VARCHAR',
-        membership => 'VARCHAR',
-        rank       => 'VARCHAR',
-        date       => 'VARCHAR',
-        club       => 'VARCHAR',
-        state      => 'VARCHAR',
+    my Pair @column-sql = (    # SQL for each column creation
+        last_name       => 'VARCHAR NOT NULL',
+        first_name      => 'VARCHAR',
+        id              => 'VARCHAR NOT NULL PRIMARY KEY',
+        membership-type => 'VARCHAR',
+        rating          => 'VARCHAR',
+        membership-date => 'VARCHAR',   # expiration
+        club            => 'VARCHAR',
+        state           => 'VARCHAR',
     );
-    my %idx-by-columns = @column-sql.keys.pairs;
-    my %columns-by-idx = %idx-by-columns.invert;
 
     my $usage = qq:to/END/;     # usage message when run as script
 
@@ -58,6 +54,17 @@ class Games::Go::AGA::Objects::TDListDB {
 
         END
 
+    # set accessors:
+    method set-dbh ($dbh)                                 {$!dbh = $dbh; self};
+    method set-dbdname (Str $db-filename)                 {$!db-filename = $db-filename; self}
+    method set-table-name (Str $table-name)               {$!table-name = $table-name; self}
+    method set-table-name-meta (Str $table-name-meta)     {$!table-name-meta = $table-name-meta; self}
+    method set-raw-filename (Str $tdlist-filename)        {$!tdlist-filename = $tdlist-filename; self}
+    method set-url (Str $url)                             {$!url = $url; self}
+    method set-max-update-errors (Int $max-update-errors) {$!max-update-errors = $max-update-errors; self}
+    method set-actions ($actions)                         {$!actions = $actions; self}
+    method set-verbose (Bool $verbose)                    {$!verbose = $verbose; self}
+
 #   sub run {   # run as a script
 #       my ($class) = @_;
 
@@ -65,9 +72,9 @@ class Games::Go::AGA::Objects::TDListDB {
 #       Getopt::Long.import(qw( :config pass_through ));
 
 #       exit 0 if (not GetOptions(
-#           'tdlist_file=s', => \$raw-filename,   # update from file
-#           'sqlite_file=s', => \$dbdname,        # sqlite file
-#           'url=s',         => \$url,                          # URL to update from
+#           'tdlist_file=s', => \$tdlist-filename, # update from file
+#           'sqlite_file=s', => \$db-filename,    # sqlite file
+#           'url=s',         => \$url,            # URL to update from
 #           'verbose',       => \$verbose,
 #           'help'           => sub { print $usage; exit 0; },
 #       ));
@@ -75,18 +82,32 @@ class Games::Go::AGA::Objects::TDListDB {
 #       my $tdlist = $class.new( verbose => $verbose );
 #       STDOUT.autoflush(1);
 
-#       if ($url) {
-#           if (uc $url ne 'AGA') {
+#       if $url {
+#           if uc $url ne 'AGA' {
 #               $tdlist.url($url);
 #           }
 #           $url = $tdlist.url;
-#           print "Updating $.dbdname from AGA ($url)\n";
-#           $tdlist.update_from_AGA();
+#           print "Updating $.db-filename from AGA ($url)\n";
+#           $tdlist.update-from-url();
 #           exit;
 #       }
-#       print "Updating $.dbdname from file ($.raw-filename)\n";
-#       $tdlist.update_from_file($.raw-filename);
+#       print "Updating $.db-filename from file ($.tdlist-filename)\n";
+#       $tdlist.update_from_file($.tdlist-filename);
 #   }
+
+    method dbh {
+        without $!dbh {
+            $!dbh = DBIish.connect(         # connect to your database, create if needed
+                'SQLite',                   # driver
+                :database($!db-filename),   # database file
+             #  :AutoCommit,
+             #  :RaiseError,                # complain if something goes wrong
+            );
+            $.db-schema;    # make sure tables exists
+            $.sth-init;     # initialize sth library
+        }
+        $!dbh;
+    }
 
     method db-schema {
         $.dbh.do("CREATE TABLE IF NOT EXISTS $!table-name ({$.sql-column-types})");
@@ -100,36 +121,9 @@ class Games::Go::AGA::Objects::TDListDB {
             INSERT OR IGNORE INTO $!table-name-meta (
                 key,
                 update_time
-            ) VALUES ( 1, 0 )
+            ) VALUES ( 1, { time } )
             END
-    }
-
-    method dbh {
-        without $!dbh {
-            $!dbh = DBIish.connect(     # connect to your database, create if needed
-                'SQLite',               # driver
-                :database<tdlistdb.sqlite>,   # database file
-             #  :AutoCommit,
-             #  :RaiseError,            # complain if something goes wrong
-            );
-            $.db-schema;    # make sure tables exists
-            $.sth-init;     # initialize sth library
-        }
-        $!dbh;
-    }
-
-    # library of statement handles
-    multi method add-sth-lib (Str $name, Str $new) { say "add-sth-lib('$name', '$new')"; %!sth-lib{$name} = $new; }
-    multi method sth-lib (Str $name) {
-        without $.dbh { }
-        my $sth = %!sth-lib{$name};
-        without ($sth) {
-            die("No SQL named $name in sth library");
-        }
-        if ($sth ~~ Str) {
-            $sth = %!sth-lib{$name} = $.dbh.prepare($sth);
-        }
-        $sth;
+        self;
     }
 
     method sth-init {
@@ -139,45 +133,75 @@ class Games::Go::AGA::Objects::TDListDB {
             insert_player  => "INSERT INTO $!table-name ({$.sql-columns}) VALUES ({$.sql-insert-qs})",
             update_id      => "UPDATE $!table-name SET {$.sql-update-qs} WHERE id = ?",
             select_id      => "SELECT * FROM $!table-name WHERE id = ?";
-            # get/set DB update time
+            # get/set DB update time (but use update-time and set-update-time methods instead)
             select_time    => "SELECT update_time FROM $!table-name-meta WHERE key = 1",
             update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
         ).map({ $.add-sth-lib($_.key, $_.value) });
+        self;
     }
 
-    method set-update-time (Int $time = time) { $.sth-lib('update_time').execute($time); }
+    # library of statement handles
+    multi method add-sth-lib (Str $name, Str $new) { say "add-sth-lib('$name', '$new')"; %!sth-lib{$name} = $new; self }
+    multi method sth-lib (Str $name) {
+        without $.dbh { }   # initialize $.dbh if necessary
+        my $sth = %!sth-lib{$name};
+        without ($sth) {
+            die("No SQL named $name in sth library");
+        }
+        $.set-update-time;
+        if $sth ~~ Str {
+            $sth = %!sth-lib{$name} = $.dbh.prepare($sth);
+        }
+        $sth;
+    }
+
+    # sql columns with SQL types declarations
+    method sql-column-types (Str $joiner = ', ') {
+        @column-sql.join($joiner);
+    }
+
+    # sql columns (without column types)
+    method sql-columns (Str $joiner = ', ') {
+        @column-sql.map({ .keys }).join($joiner);
+    }
+
+    # col-name and '?, ' place-holder question mark for each column,
+    #    appropriate for an UPDATE query
+    method sql-update-qs (Str $joiner = ', ') {
+        @column-sql.map({ .key ~ ' = ?'}).join($joiner);
+    }
+
+    # place-holder question marks for each column,
+    #    appropriate for an INSERT query
+    method sql-insert-qs (Str $joiner = ', ') {
+        @column-sql.map('?').join($joiner);    # one question mark per column
+    }
+
+    method set-update-time (Int $time = time) { $.sth-lib('update_time').execute($time); self }
     method update-time {
         my $sth = $.sth-lib('select_time');
-        $sth.execute();
-        my $time = $sth.fetchall_arrayref();
+        $sth.execute;
+        my $time = $sth.fetchall_arrayref;
         $time = $time[0][0];
-        return $time || 0;
+        $time || 0;
     }
 
-    method select_id (Int $id) {
-        my $sth = $.sth-lib('select_id');
-        $sth.execute($id);
-        # ID is primary index, so can only be one - fetch into first array
-        # element:
-        my $row = $sth.fetchall_hashref;
-        say $row.gist;
-    }
-
-    method update_from_AGA {
-        die "Sorry, can't fetch from AGA yet";
-        #  if (not $!ua) {
+    method update-from-url {
+        die "Sorry, can't update from URL yet";
+        #  if not $!ua {
         #      $!ua = LWP::UserAgent.new;
         #  }
 
-        #  $.my-print("Starting $!raw-filename fetch from $!url at {time}") if ($!verbose);
-        #  $!ua.mirror($!url, $!raw-filename);
-        #  $.my-print("... fetch done at {time}\n") if ($!verbose);
-        #  $.update_from_file($!raw-filename);
+        #  $.my-print("Starting $!tdlist-filename fetch from $!url at {time}") if $!verbose;
+        #  $!ua.mirror($!url, $!tdlist-filename);
+        #  $.my-print("... fetch done at {time}\n") if $!verbose;
+        #  $.update_from_file($!tdlist-filename);
+        #  self
     }
 
-    method update_from_file (Str $filename = $!raw-filename) {
+    method update_from_file (Str $filename = $!tdlist-filename) {
 say "update_from_file($filename)";
-        $!raw-filename = $filename;
+        $!tdlist-filename = $filename;
         $.update-from-fh($filename.IO);
         self;
     }
@@ -186,18 +210,17 @@ say "update_from_file($filename)";
 say "update-from-fh";
         $!fh = $fh;
 
-        $.my-print("Starting database update at {time}\n") if ($!verbose);
+        $.my-print("Starting database update at {time}\n") if $!verbose;
 say "Starting database update at {time}\n";
         $.dbh.do('BEGIN');
         my @errors;
         for $fh.lines -> $line {
             next if $line.not;    # skip empty line
-            last if @errors.elems >= $.max-update-errors;
 
 say "Line {$fh.ins}: $line";
-            if ($!verbose) {
-                $.my-print('.')  if ($fh.ins %% 1000);
-                $.my-print("\n") if ($fh.ins %% 40000);
+            if $!verbose {
+                $.my-print('.')  if $fh.ins %% 1000;
+                $.my-print("\n") if $fh.ins %% 40000;
             }
             try {   # in case a line crashes, collect error but continue
                 $.update-from-line($line);
@@ -205,11 +228,12 @@ say "Line {$fh.ins}: $line";
             CATCH {
                 push @errors, $fh.ins => $_;
             }
+            last if @errors.elems >= $.max-update-errors;
         }
         $.dbh.do('COMMIT');  # make sure we do this!
-        $.update_time(time);
+        $.update_time;
 say "database update done at {time}\n";
-        if (@errors.elems) {
+        if @errors.elems {
             die("{@errors.elems} errors - aborting:\n@errors");
         }
         self;
@@ -219,7 +243,10 @@ say "database update done at {time}\n";
 say "parsing...";
         my $player = Games::Go::AGA::Objects::TDList::Grammar.parse($line, :actions($!actions)).ast;
 say "update {$player.gist}";
-        $.check-dup-player($player);
+        with $player {
+            $.check-dup-player($player);
+        }
+        self;
     }
 
     method check-dup-player (Games::Go::AGA::Objects::Player $player) {
@@ -230,7 +257,7 @@ say 'execute complete';
         my $players = $sth.fetchall_arrayref;
 say 'fetchall_arrayref complete   dup player? TODO!';
         for $players -> $already {
-            if ($already.id eq $player.id) {
+            if $already.id eq $player.id {
                 $.update-player($player);
                 return self;
             }
@@ -246,28 +273,7 @@ say 'inserting new record';
     method update-player (Games::Go::AGA::Objects::Player $player) {
         my $sth = $.sth-lib('update_id');
         $sth.execute($.player-column-values($player));
-    }
-
-    # sql columns with SQL types declarations
-    method sql-column-types (Str $joiner = ', ') {
-        @column-sql.kv.join($joiner);
-    }
-
-    # sql columns (without column types)
-    method sql-columns (Str $joiner = ', ') {
-        @column-sql.keys.join($joiner);
-    }
-
-    # '?, ' place-holder question marks for each column,
-    #    appropriate for an UPDATE or INSERT query
-    method sql-update-qs (Str $joiner = ', ') {
-        @column-sql.map({$_.key ~ ' = ?'}).join($joiner);
-    }
-
-    # place-holder question marks for each column,
-    #    appropriate for an INSERT query
-    method sql-insert-qs (Str $joiner = ', ') {
-        @column-sql.map('?').join($joiner);    # one question mark per column
+        self;
     }
 
     method my-print (*@a) { self.&!print-callback(@a); self; }
@@ -283,225 +289,212 @@ say 'inserting new record';
 
 B<Games::Go::AGA::TDListDB> builds a database (SQLite by default) of
 information from the TDList file provided by the American Go Association.
+Update methods are available to update/insert database records by line,
+by filehandle, by filename, or by URL.
 
-An update method is available that can reach out to the AGA website and
-grab the latest TDList information.
+A small selection of prepared SQL queries is stored in an extendable
+library - see B<sth-lib> below.
 
-=head2 Accessors
+=head2 Accessors and Options
 
-All of the B<options> listed under the B<new> method (below) may also be
-used as accessors.
+The following attributes are defined with 'fetch' accessors.  Each of these
+has a corresponding B<set-...> method, and they may be specified as named
+options to B<new>:
 
-=head2 Methods
+    has      $.dbh;                                 # initialized in method $.dbh or $.sth-lib
+    has  Str $.db-filename       = 'tdlistdb.sqlite';
+    has  Str $.table-name        = 'tdlist';
+    has  Str $.table-name-meta   = 'tdlist-meta';   # currently just latest update time
+    has  Str $.tdlist-filename   = 'TDList.txt';    # file to update from
+    has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt';
+    has  Int $.max-update-errors = 10;              # before aborting update
+    has      $.actions           = Games::Go::AGA::Objects::TDList::Actions.new;
+    has Bool $.verbose           = False;
+    has      &.print-callback    = method { $.say };
 
-=over
+=item dbh => DBIish-handle
 
-=item $tdlist = Games::Go::AGA::Objects::TDListDB.new( [ %options ] );
+If B<$dbh> (a DBIsh handle resulting from a B<connect> call) is supplied,
+it is used as the database handle, otherwise an SQLite DBIish handle is
+created and used.  See also the B<dbh> method below.
 
-Creates a new TdListDB object.  The following options may be supplied (and
-may also be accessed via functions of the same name):
+The return value is the DBIish handle you want to use for regular database
+operations, such as B<do>, B<prepare>, etc.  However, see also the
+predefined statement handles (B<sth-lib> below), the statement you need may
+already be there.
 
-=over
+=item db-filename => 'path/to/SQLite-filename'
 
-=item db => $db
-
-If B<$db> (a perl DBI object) is supplied, it is used as the database
-object handle, otherwise an SQLite DBI handle is created and used.
-
-The return value is the DBI object you want to use for regular database
-operations, such as inserting, updating, etc.  However, see also the
-predefined statement handles (B<tdlist-E<gt>sth> below), the statement you
-need may already be there.
-
-=item dbdname => 'path/to/filename'
-
-This is the SQLite database filename used when no B<db> object is supplied
-to B<new>.  If the file does not exist, it is created and populated.  The
+This is the SQLite database filename used when no B<dbh> handle is
+supplied.  If the file does not exist, it is created and populated.  The
 default filename is 'tdlistdb.sqlite'.
 
-=item max-update-errors => integer
+=item table-name
 
-An B<update_from_file> or B<update_from_AGA> counts errors until this
-number is reached, at which point the update gives up and throws an
-exception.  The default value is 10.
+=item table-name-meta
+
+The name of the main database table, and an adjunct table to hold meta-data
+(currently just the most recent B<update-time>)
+
+The default table name is 'tdlistn'.
+
+=item tdlist-filename => 'path/to/TDList.txt'
+
+When fetching from a URL, the TDList data is dumped into this filename.
+If this file already exists, and is newer than the data at the URL, the
+fetch is skipped (see perldoc LWP::UserAgent B<mirror>).
 
 =item url => 'http://where.to.find.tdlist'
 
 The URL to retrieve TDList from.  The default is
 'http://www.usgo.org/ratings/TDListN.txt'.
 
-=item raw-filename => 'TDList.txta
+=item max-update-errors => integer
 
-When fetching from the AGA, the TDList data is dumped into this filename.
-If this file already exists, and is newer than the data at the AGA, the
-fetch is skipped (since the data should be the same - see perldoc
-LWP::UserAgent B<mirror>).
+An B<update_from_file> or B<update-from-url> counts errors until this
+number is reached, at which point the update gives up and throws an
+exception.  The default value is 10.
 
-=item table-name => 'DB_table_name'
+=item actions => Actions::Object.new()
 
-The name of the database table.  An additional table (retrievable with
-the B<table-name-meta> read-only accessor) is also created to hold the
-table's B<update_time>.
+The Actions object to instantiate Player objects from
+Games::Go::AGA::Objects::TDList::Grammar.parse.
 
-When returning the table name, the value is always metaquoted.
+=item verbose => Boolean
 
-The default table name is 'tdlistn'.
+Print information verbosely when true.
 
-=item $tdlistdb.print_cb( [ \&callback ]
 
-Set/get the print callback.  Whenever something is to be printed, the
-B<callback> function is called with the print arguments.  B<callback>
-defaults to the standard perl print function, and new B<callback> functions
-should be written to take arguments the same way print does.
+=item print-callback => print-method
 
-=back
+The print callback.  This module might be used where normal printing is not
+proper (e.g: Dancer).  Whenever something is to be printed, the
+B<print-callback> method is called with the B<say> arguments.
+B<print-callback> defaults to the standard perl B<say> function. New
+B<print-callback> functions should be written to take arguments the same
+way B<say> does.
 
-=item $tdlistdb.my-print( @args )
+=head2 Methods
+
+Methods without explicit return values return B<self>, enabling method
+chaining.
+
+=item dbh
+
+Overrides the standard perl 6 B<$.dbh> read accessor.  If B<$!dbh> has not
+been set (by an option to B<new>, or a previous call to B<dbh>), $!dbh is
+set from the result of a DBIish.connect call using SQLite as the driver and
+B<$!db-filename> as the database filename.
+
+After connecting, calls B<$.db-schema> and B<$.sth-init>.  If you supply your
+own B<dbh>, you should call these two methods by hand.
+
+Returns B<$!dbh>, the database handle.
+
+=item db-schema
+
+Creates (if not already present) the database tables B<$!table-name> and
+B<$!table-name-meta>.
+
+=item sth-init
+
+Prepares a small set of SQL statements.  Custom statement handles may be
+added with B<add-sth-lib>.  Retrieve statement handles with B<sth-lib>
+(below).  The following statements are available by default:
+
+    select_by_id   => "SELECT * FROM $!table-name WHERE id = ?",
+    select_by_name => "SELECT * FROM $!table-name WHERE last_name = ? AND first_name = ?",
+    insert_player  => "INSERT INTO $!table-name ({$.sql-columns}) VALUES ({$.sql-insert-qs})",
+    update_id      => "UPDATE $!table-name SET {$.sql-update-qs} WHERE id = ?",
+    select_id      => "SELECT * FROM $!table-name WHERE id = ?";
+    # get/set DB update time (but use update-time and set-update-time methods instead)
+    select_time    => "SELECT update_time FROM $!table-name-meta WHERE key = 1",
+    update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
+
+See B<sql-columns>, B<sql-insert-qs> and B<sql-update-qs> below.
+
+=item sth-lib(Str $name)
+
+Retrieve prepared statement handles by name from the statement library.
+
+=item sql-column-types ( [ Str $joiner = ', ' ] )
+
+Returns a list of the table column names and their SQL initialization type (e.g: VARCHAR(256))
+joined by B<$joiner>.  This list is used in B<db-schema> to create the tables.
+
+These are the columns, in order:
+
+    last_name       => 'VARCHAR NOT NULL',
+    first_name      => 'VARCHAR',
+    id              => 'VARCHAR NOT NULL PRIMARY KEY',
+    membership-type => 'VARCHAR',
+    rating          => 'VARCHAR',
+    membership-date => 'VARCHAR',   # expiration
+    club            => 'VARCHAR',
+    state           => 'VARCHAR',
+
+=item sql-columns ( [ Str $joiner = ', ' ] )
+
+Returns a list of the table column names joined by B<$joiner>.  This list
+is suitable for INSERT SQL statements (see B<insert-player> in B<sth-lib>).
+
+=item sql-update-qs ( [ Str $joiner = ', ' ] )
+
+Returns a list of question mark place holders, one for each table column,
+joined by B<$joiner>.  This list is suitable for UPDATE SQL statements (see
+B<update-id> in B<sth-lib>).
+
+=item sql-insert-qs ( [ Str $joiner = ', ' ] )
+
+Returns a list of question mark place holders, one for each table column,
+joined by B<$joiner>.  This list is suitable for INSERT SQL statements (see
+B<insert-player> in B<sth-lib>).
+
+=item update-time
+=item set-update-time ( [ Int $time = time ] )
+
+Get/set the B<update-time> in the B<$!table-name-meta> table.  This time is
+in seconds since the epoch.  If no time is passed to B<set-update-time>,
+the current time is used.
+
+=item update-from-url
+
+Fetches the file from B<$!url>, loads it into B<$tdlist-filename>,
+and calls B<update-from-file>.
+
+=item update-from-file
+
+Reads B<tdlist-filename> and calls B<$.update-from-line> on each line.  The
+read / update loop is enclosed in a database BEGIN/COMMIT block, and calls
+to B<update-from-line> are enclosed in a 'try' block.  Exceptions are
+caught and counted, If the count exceeds B<$!max-update-errors>, the loop
+is aborted, the database is COMMITed, and the errors are reported by
+throwing another exception.
+
+=item update-from-line ( Str $line )
+
+Calls Games::Go::AGA::Objects::TDList::Grammer.parse( $line, :actions($!actions) ).ast
+to create a new Games::Go::AGA::Objects::Player object.  Calls B<$.check-dup-player>
+on each new Player.
+
+=item check-dup-player ( Games::Go::AGA::Objects::Player $player )
+
+Checks if the AGA ID of B<$player> is already in the database.  If so, calls
+B<update-player($player)> and returns.  Otherwise, inserts the new player into
+the database.
+
+=item update-player ( Games::Go::AGA::Objects::Player $player )
+
+Adds B<$player> to the database.
+
+=item my-print( @args )
 
 Calls B<print-callback> with B<@args>.
 
-=item $tdlistdb.column_idx( [ 'name' ] )
-
-When 'name' is defined, it is lower-cased, and the column index for 'name' (or undef
-if 'name' isn't one of the default column names) is returned.
-
-When 'name' is not provided, returns an array (or ref to array in scalar context) of
-the default column names, in order.
-
-These are the default columns by name:
-
-=over
-
-=item last_name
-
-=item first_name
-
-=item id
-
-=item membership
-
-=item rank
-
-=item date
-
-=item club
-
-=item state
-
-=back
-
-=item $tdlistdb.update_from_AGA( [ $force ] )
-
-Reach out to the American Go Association (AGA) ratings web page and
-grab the most recent TDList information.  Update the database.  May
-throw an exception if the update fails for any of a number of reasons.
-
-=item $tdlistdb.update_from_file( $file )
-
-Updates the database from a file in TDList format.  Called by
-B<update_from_AGA>.  B<$file> may be a file handle, or if it's a
-string, it is the name of the file to open.  May throw an exception on
-various file or formatting errors.
-
-=item $sql = $tdlistdb.sql-columns( [ $joiner ])
-
-Returns SQL suitable for the list of column names, separated by commas
-(or something else if you set a B<$joiner>).  See INSERT and SELECT
-queries.
-
-=item $sql = $tdlistdb.sql-column-types( [ $joiner ])
-
-Returns SQL suitable for the list of column names followed by the
-column type, separated by commas (or something else if you set a
-B<$joiner>).  See CREATE TABLE queries.
-
-=item $sql = $tdlistdb.sql-update-qs( [ $joiner ])
-
-Returns SQL suitable for the list of question-mark ('?') placeholders
-for each column, separated by commas (or something else if you set a
-B<$joiner>).  See UPDATE queries.
-
-=item $sql = $tdlistdb.sql-insert-qs( [ $joiner ])
-
-Returns SQL suitable for the list of "column = ?" placeholders,
-separated by commas (or something else if you set a B<$joiner>).  See
-INSERT queries.
-
-=item $id = $tdlistdb.update_time( [ $seconds ] )
-
-Get or set the time (in seconds) the database was last updated (via
-B<update_from_AGA> or B<update_from_file>).
-
-=item @player_fields = $tdlistdb.select_id( 'id_string' )
-
-Returns the array (or ref to array in scalar context) of the player with ID
-equal to 'id_string', or an empty array of 'id_string' is not found.
-
-=item $sth = $tdlistdb.add-sth-lib('handle_name', 'SQL' )
-
-B<Games::Go::AGA::Objects::TDListDB> maintains a small library of prepared DBI
-statement handles, available by name.  You may add to the list, but
-take care not to overwrite existing names if you want this module to
-continue working correctly.  The predefined handles are:
-
-=over
-
-=item $tdlistdb.sth-lib('select_by_id').execute( id )
-
-Find a player by AGA ID.  'id' is a number with no alphabetic prefix
-(i.e: not like USA123).
-
-=item $tdlistdb.sth-lib('select_by_name').execute('last name', 'first name')
-
-Find a player by last name and first name.  Note that the 'id' is the
-'PRIMARY KEY' for the database, and that last and first names may not
-be unique.
-
-=item $tdlistdb.sth-lib('insert_player').execute(@new_column_values)
-
-Add a new player to the database.  @new_column_values are values for all
-the columns.
-
-Returns the @new_column_values array (or a reference to it in scalar
-context), with the new ID if it was set.
-
-=item $tdlistdb.sth-lib('update_id').execute(@new_column_values, 'ID')
-
-Update a player already in the database.  @new_column_values are values for
-all the columns, and ID is the player's
-unique ID.  Note that a new ID is also in the @new_column_values.  These
-should differ only under exceptional circumstances, such as if a TMP player
-gets a real AGA ID.
-
-=item $tdlistdb.sth-lib('select_id').execute('ID');
-
-Find a player by ID.  Note that the ID is the 'PRIMARY KEY' for the
-database, so this query will return only one record.
-
-=item $tdlistdb.sth-lib('select_time').execute();
-
-Get the current database update time (but use B<update_time()> instead).
-
-=item $tdlistdb.sth-lib('update_time').execute($new);
-
-Set the current database update time (but use B<update_time($new)> instead).
-
-=back
-
-=back
-
 =head1 SEE ALSO
 
-=over
+=item Games::Go::AGA::Objects::TDList::Grammar
 
-=item Games::Go::AGA::Parse
-
-Parsers for AGA format files.
-
-=item Games::Go::Wgtd
-
-Online go tournament system.
-
-=back
+=item Games::Go::AGA::Objects::TDList::Actions
 
 =end pod
