@@ -17,13 +17,13 @@ class Games::Go::AGA::Objects::TDListDB {
     has      $.dbh;                                 # initialized in method $.dbh or $.sth-lib
     has  Str $.db-filename       = 'tdlistdb.sqlite';
     has  Str $.table-name        = 'tdlist';
-    has  Str $.table-name-meta   = 'tdlist-meta';   # currently just latest update time
+    has  Str $.table-name-meta   = 'tdlist_meta';   # currently just latest update time
     has  Str $.tdlist-filename   = 'TDList.txt';    # file to update from
     has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt';
     has  Int $.max-update-errors = 10;              # before aborting update
     has      $.actions           = Games::Go::AGA::Objects::TDList::Actions.new;
     has Bool $.verbose           = False;
-    has      &.print-callback    = method { $.say };
+    has      &.print-callback    = method (*@a) { say(|@a) };
     has      $!fh;
     has      %!sth-lib;
 
@@ -32,9 +32,9 @@ class Games::Go::AGA::Objects::TDListDB {
         last_name       => 'VARCHAR NOT NULL',
         first_name      => 'VARCHAR',
         id              => 'VARCHAR NOT NULL PRIMARY KEY',
-        membership-type => 'VARCHAR',
+        membership_type => 'VARCHAR',
         rating          => 'VARCHAR',
-        membership-date => 'VARCHAR',   # expiration
+        membership_date => 'VARCHAR',   # expiration
         club            => 'VARCHAR',
         state           => 'VARCHAR',
     );
@@ -64,6 +64,8 @@ class Games::Go::AGA::Objects::TDListDB {
     method set-max-update-errors (Int $max-update-errors) {$!max-update-errors = $max-update-errors; self}
     method set-actions ($actions)                         {$!actions = $actions; self}
     method set-verbose (Bool $verbose)                    {$!verbose = $verbose; self}
+
+my $ii = 0;
 
 #   sub run {   # run as a script
 #       my ($class) = @_;
@@ -105,6 +107,7 @@ class Games::Go::AGA::Objects::TDListDB {
             );
             $.db-schema;    # make sure tables exists
             $.sth-init;     # initialize sth library
+    say "db init $!db-filename done";
         }
         $!dbh;
     }
@@ -123,32 +126,34 @@ class Games::Go::AGA::Objects::TDListDB {
                 update_time
             ) VALUES ( 1, { time } )
             END
+    say 'db-schema done';
         self;
     }
 
     method sth-init {
-        ( # SQL query library
+        my @pairs = # SQL query library
             select_by_id   => "SELECT * FROM $!table-name WHERE id = ?",
             select_by_name => "SELECT * FROM $!table-name WHERE last_name = ? AND first_name = ?",
             insert_player  => "INSERT INTO $!table-name ({$.sql-columns}) VALUES ({$.sql-insert-qs})",
             update_id      => "UPDATE $!table-name SET {$.sql-update-qs} WHERE id = ?",
-            select_id      => "SELECT * FROM $!table-name WHERE id = ?";
+            select_id      => "SELECT * FROM $!table-name WHERE id = ?",
             # get/set DB update time (but use update-time and set-update-time methods instead)
             select_time    => "SELECT update_time FROM $!table-name-meta WHERE key = 1",
             update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
-        ).map({ $.add-sth-lib($_.key, $_.value) });
+        ;
+        @pairs.map({ $.add-sth-lib( .key, .value) });
+        say %!sth-lib.keys;
         self;
     }
 
     # library of statement handles
-    multi method add-sth-lib (Str $name, Str $new) { say "add-sth-lib('$name', '$new')"; %!sth-lib{$name} = $new; self }
+    multi method add-sth-lib (Str $name, Str $new) { %!sth-lib{$name} = $new; self }
     multi method sth-lib (Str $name) {
         without $.dbh { }   # initialize $.dbh if necessary
         my $sth = %!sth-lib{$name};
         without ($sth) {
             die("No SQL named $name in sth library");
         }
-        $.set-update-time;
         if $sth ~~ Str {
             $sth = %!sth-lib{$name} = $.dbh.prepare($sth);
         }
@@ -157,7 +162,7 @@ class Games::Go::AGA::Objects::TDListDB {
 
     # sql columns with SQL types declarations
     method sql-column-types (Str $joiner = ', ') {
-        @column-sql.join($joiner);
+        @column-sql.map({ .fmt('%s %s') }).join($joiner);
     }
 
     # sql columns (without column types)
@@ -174,7 +179,7 @@ class Games::Go::AGA::Objects::TDListDB {
     # place-holder question marks for each column,
     #    appropriate for an INSERT query
     method sql-insert-qs (Str $joiner = ', ') {
-        @column-sql.map('?').join($joiner);    # one question mark per column
+        @column-sql.map({ '?' }).join($joiner);    # one question mark per column
     }
 
     method set-update-time (Int $time = time) { $.sth-lib('update_time').execute($time); self }
@@ -256,6 +261,7 @@ say 'calling select_by_name';
 say 'execute complete';
         my $players = $sth.fetchall_arrayref;
 say 'fetchall_arrayref complete   dup player? TODO!';
+say $players.perl;
         for $players -> $already {
             if $already.id eq $player.id {
                 $.update-player($player);
@@ -304,13 +310,13 @@ options to B<new>:
     has      $.dbh;                                 # initialized in method $.dbh or $.sth-lib
     has  Str $.db-filename       = 'tdlistdb.sqlite';
     has  Str $.table-name        = 'tdlist';
-    has  Str $.table-name-meta   = 'tdlist-meta';   # currently just latest update time
+    has  Str $.table-name-meta   = 'tdlist_meta';   # currently just latest update time
     has  Str $.tdlist-filename   = 'TDList.txt';    # file to update from
     has  Str $.url               = 'https://www.usgo.org/ratings/TDListN.txt';
     has  Int $.max-update-errors = 10;              # before aborting update
     has      $.actions           = Games::Go::AGA::Objects::TDList::Actions.new;
     has Bool $.verbose           = False;
-    has      &.print-callback    = method { $.say };
+    has      &.print-callback    = method (*@a) { say(|@a) };
 
 =item dbh => DBIish-handle
 
@@ -427,9 +433,9 @@ These are the columns, in order:
     last_name       => 'VARCHAR NOT NULL',
     first_name      => 'VARCHAR',
     id              => 'VARCHAR NOT NULL PRIMARY KEY',
-    membership-type => 'VARCHAR',
+    membership_type => 'VARCHAR',
     rating          => 'VARCHAR',
-    membership-date => 'VARCHAR',   # expiration
+    membership_date => 'VARCHAR',   # expiration
     club            => 'VARCHAR',
     state           => 'VARCHAR',
 
