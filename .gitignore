@@ -6,3 +6,4 @@ Games-Go-AGA-Objects*
 notes*
 lib/.precomp/
 FakeDir/
+*.sqlite
