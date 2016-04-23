@@ -7,7 +7,7 @@
 #      CREATED:  Wed Apr 20 12:49:10 PDT 2016
 #===============================================================================
 use v6;
-use Grammar::Tracer;   # include for debug help
+# use Grammar::Tracer;   # include for debug help
 
 grammar Games::Go::AGA::Objects::TDList::Grammar {
     token TOP {

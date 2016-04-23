@@ -91,6 +91,14 @@ class Games::Go::AGA::Objects::Player
           !! $.rank;
     }
 
+    # convenience method to extract an individual named flag
+    method flag (Str $key) {
+        $!flags ~~ m:i/ << $key '=' (\S+) /;
+        ~$0 if $0.so;
+    }
+
+    method club { $.flag('Club') }      # required for TDList Club column
+
     method gist {
         (
             $.id,

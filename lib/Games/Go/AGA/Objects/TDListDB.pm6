@@ -29,14 +29,14 @@ class Games::Go::AGA::Objects::TDListDB {
 
     # names and SQL declarations of the database columns, in order
     my Pair @column-sql = (    # SQL for each column creation
+        id              => 'VARCHAR NOT NULL PRIMARY KEY',
         last_name       => 'VARCHAR NOT NULL',
         first_name      => 'VARCHAR',
-        id              => 'VARCHAR NOT NULL PRIMARY KEY',
-        membership_type => 'VARCHAR',
         rating          => 'VARCHAR',
-        membership_date => 'VARCHAR',   # expiration
         club            => 'VARCHAR',
         state           => 'VARCHAR',
+        membership_type => 'VARCHAR',
+        membership_date => 'VARCHAR',   # expiration
     );
 
     my $usage = qq:to/END/;     # usage message when run as script
@@ -107,7 +107,6 @@ my $ii = 0;
             );
             $.db-schema;    # make sure tables exists
             $.sth-init;     # initialize sth library
-    say "db init $!db-filename done";
         }
         $!dbh;
     }
@@ -126,7 +125,6 @@ my $ii = 0;
                 update_time
             ) VALUES ( 1, { time } )
             END
-    say 'db-schema done';
         self;
     }
 
@@ -142,7 +140,6 @@ my $ii = 0;
             update_time    => "UPDATE $!table-name-meta SET update_time = ? WHERE key = 1",
         ;
         @pairs.map({ $.add-sth-lib( .key, .value) });
-        say %!sth-lib.keys;
         self;
     }
 
@@ -155,6 +152,7 @@ my $ii = 0;
             die("No SQL named $name in sth library");
         }
         if $sth ~~ Str {
+            say "prepare $name = $sth";
             $sth = %!sth-lib{$name} = $.dbh.prepare($sth);
         }
         $sth;
@@ -205,14 +203,12 @@ my $ii = 0;
     }
 
     method update_from_file (Str $filename = $!tdlist-filename) {
-say "update_from_file($filename)";
         $!tdlist-filename = $filename;
         $.update-from-fh($filename.IO);
         self;
     }
 
     method update-from-fh (IO $fh) {
-say "update-from-fh";
         $!fh = $fh;
 
         $.my-print("Starting database update at {time}\n") if $!verbose;
@@ -245,41 +241,44 @@ say "database update done at {time}\n";
     }
 
     method update-from-line (Str $line) {
-say "parsing...";
         my $player = Games::Go::AGA::Objects::TDList::Grammar.parse($line, :actions($!actions)).ast;
-say "update {$player.gist}";
         with $player {
-            $.check-dup-player($player);
+            $.insert-or-update-player($player);
         }
         self;
     }
 
-    method check-dup-player (Games::Go::AGA::Objects::Player $player) {
-say 'calling select_by_name';
-        my $sth = $.sth-lib('select_by_name');
-        $sth.execute($player.last-name, $player.first-name);
+    method insert-or-update-player (Games::Go::AGA::Objects::Player $player) {
+say 'calling select_by_id';
+        my $sth = $.sth-lib('select_by_id');
+        $sth.execute($player.id);
 say 'execute complete';
-        my $players = $sth.fetchall_arrayref;
-say 'fetchall_arrayref complete   dup player? TODO!';
-say $players.perl;
-        for $players -> $already {
-            if $already.id eq $player.id {
-                $.update-player($player);
-                return self;
-            }
-            # TODO check/report other dups
+        my $in-db = $sth.fetchall_arrayref[0];
+say 'fetchall_arrayref complete: ', $in-db.perl;
+        if $in-db.so {
+            # ID is already in database, do an update
+say 'updating record: ', $.player-column-values($player);
+            $.sth-lib('update_id').execute(|$.player-column-values($player), $player.id);
+            return self;
         }
         # ID is not in database, insert new record
-say 'inserting new record';
-        $.sth-lib('insert_player').execute($.player-column-values($player));  # TODO
+say 'inserting new record: ', $.player-column-values($player).perl;
+        $.sth-lib('insert_player').execute(|$.player-column-values($player));
         self;
     }
 
-    # ID is already in database, do an update
-    method update-player (Games::Go::AGA::Objects::Player $player) {
-        my $sth = $.sth-lib('update_id');
-        $sth.execute($.player-column-values($player));
-        self;
+    method player-column-values (Games::Go::AGA::Objects::Player $player, Str $joiner = ', ') {
+        # return list of $player's values for each database column
+        # @column-sql.map({ .key.map({ say "\$player.$_"; $player.$_ }) }).join($joiner);
+        my @keys;
+        for @column-sql -> $pair {
+            my $key = $pair.key.subst(/_/, '-');    # SQL doesn't like dashes in names
+            my $value = $player."$key"() || '';
+            push @keys, ($key eq 'date')
+              ?? $value.Str
+              !! ~$value;
+        }
+        @keys;
     }
 
     method my-print (*@a) { self.&!print-callback(@a); self; }
@@ -430,14 +429,14 @@ joined by B<$joiner>.  This list is used in B<db-schema> to create the tables.
 
 These are the columns, in order:
 
+    id              => 'VARCHAR NOT NULL PRIMARY KEY',
     last_name       => 'VARCHAR NOT NULL',
     first_name      => 'VARCHAR',
-    id              => 'VARCHAR NOT NULL PRIMARY KEY',
-    membership_type => 'VARCHAR',
     rating          => 'VARCHAR',
-    membership_date => 'VARCHAR',   # expiration
     club            => 'VARCHAR',
     state           => 'VARCHAR',
+    membership_type => 'VARCHAR',
+    membership_date => 'VARCHAR',   # expiration
 
 =item sql-columns ( [ Str $joiner = ', ' ] )
 
@@ -480,18 +479,14 @@ throwing another exception.
 =item update-from-line ( Str $line )
 
 Calls Games::Go::AGA::Objects::TDList::Grammer.parse( $line, :actions($!actions) ).ast
-to create a new Games::Go::AGA::Objects::Player object.  Calls B<$.check-dup-player>
+to create a new Games::Go::AGA::Objects::Player object.  Calls B<$.insert-or-update-player>
 on each new Player.
 
-=item check-dup-player ( Games::Go::AGA::Objects::Player $player )
+=item insert-or-update-player ( Games::Go::AGA::Objects::Player $player )
 
-Checks if the AGA ID of B<$player> is already in the database.  If so, calls
-B<update-player($player)> and returns.  Otherwise, inserts the new player into
-the database.
-
-=item update-player ( Games::Go::AGA::Objects::Player $player )
-
-Adds B<$player> to the database.
+Checks if the AGA ID of B<$player> is already in the database.  If so,
+updates the player record and returns.  Otherwise, inserts the new player
+into the database.
 
 =item my-print( @args )
 

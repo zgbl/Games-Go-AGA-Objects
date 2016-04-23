@@ -17,20 +17,20 @@ class Games::Go::AGA::Objects::TDList::Actions {
     #   from the TDList Grammar:
     #
     method TOP ($/) {
-        my $player = Games::Go::AGA::Objects::Player.new(
-            id              => ~$<player><id>,
-            last-name       => ~$<player><last-name>,
-            first-name      => ~$<player><first-name>,
-            rating          => +$<player><rating>,
-            membership-type => ~$<player><membership-type>,
-            flags           =>  $<player><club>.so ?? "Club=" ~ $<player><club> !! '',
-            state           => ~$<player><state>,
-        );
-        with $<player><membership-date> {
-            my @mdy = $<player><membership-date>.split(/\D+/);  # split on non-numerics
-            $player.set-membership-date(Date.new(+@mdy[2], +@mdy[0], +@mdy[1]));
+        my $m = $<player>;  # the match
+        my %opts = 
+            id              => ~$m<id>,
+            last-name       => ~$m<last-name>;
+        with $m<first-name>      { %opts<first-name>      = ~$m<first-name> }
+        with $m<rating>          { %opts<rating>          =  $m<rating>.Rat }
+        with $m<membership-type> { %opts<membership-type> = ~$m<membership-type> }
+        with $m<club>            { %opts<club>            = "Club=" ~ $m<club> }
+        with $m<state>           { %opts<state>           = ~$m<state> }
+        with $m<membership-date> {
+            my @mdy = $m<membership-date>.split(/\D+/);  # split on non-numerics
+            %opts<membership-date> = Date.new(+@mdy[2], +@mdy[0], +@mdy[1]);
         }
-        make $player;
+        make Games::Go::AGA::Objects::Player.new(|%opts);
     }
 }
 
