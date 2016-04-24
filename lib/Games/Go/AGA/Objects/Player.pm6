@@ -12,18 +12,19 @@ use Games::Go::AGA::Objects::Types;
 
 class Games::Go::AGA::Objects::Player
     does Games::Go::AGA::Objects::ID_Normalizer_Role {
-    has Str    $.id is required;    # AGA or tmp ID
+
+    has Str    $.id is required;       # AGA or tmp ID
     has AGA-Id $!normalized-id;
     has Str    $.last-name is required;
-    has Str    $.first-name = '';
-    has Rank   $.rank;     # like 5D or 4k
-    has Rating $.rating;   # like 5.5 or -4.5
+    has Str    $.first-name      = '';
+    has Rank   $.rank;                 # like 5D or 4k
+    has Rating $.rating;               # like 5.5 or -4.5
     has Str    $.membership-type = '';
     has Date   $.membership-date;
-    has Str    $.state = '';
-    has Str    $.comment = '';
-    has Num    $.sigma;    # for the calculating ratings
-    has Str    $.flags = '';    # other flags
+    has Str    $.state           = '';
+    has Str    $.comment         = '';
+    has Num    $.sigma;                # for the calculating ratings
+    has Str    $.flags           = ''; # other flags
     has        &.change-callback = method { };
 
     method id { # override accessor to normalize IDs
@@ -38,28 +39,18 @@ class Games::Go::AGA::Objects::Player
     #
     # accessors
     #
-    method set-id (AGA-Id $id)              { $!id = $id; $.changed; };
-    method set-last-name (Str $last)        { $!last-name = $last; $.changed; };
-    method set-first-name (Str $first)      { $!first-name = $first; $.changed; };
-    method rank { $!rank; };
-    method set-rank (Str $rank) {
-        $!rank = $rank.uc;
-        $!rating = Nil;
-        $.changed;
-    };
-    method rating { $!rating };
-    method set-rating (Rating $rating)      {
-        $!rating = $rating;
-        $!rank = Nil;
-        $.changed;
-    };
-    method set-membership-type (Str $type)  { $!membership-type = $type; $.changed; }
-    method set-membership-date (Date $date) { $!membership-date = $date; $.changed; }
-    method set-state (Str $state)           { $!state = $state; $.changed; }
-    method set-comment (Str $comment)       { $!comment = $comment; $.changed; }
-    method set-sigma (Rat $sigma)           { $!sigma = $sigma; $.changed; }
-    method set-flags (Str $flags)           { $!flags = $flags; $.changed; }
-    method set-change-callback (&ccb)       { &!change-callback = &ccb; self; }
+    method set-id (AGA-Id $i)            { $!id              = $i; $.changed; }
+    method set-last-name (Str $l)        { $!last-name       = $l; $.changed; }
+    method set-first-name (Str $f)       { $!first-name      = $f; $.changed; }
+    method set-rank (Str $r)             { $!rank            = $r.uc; $!rating = Nil; $.changed; }
+    method set-rating (Rating $r)        { $!rating          = $r; $!rank = Nil; $.changed; }
+    method set-membership-type (Str $t)  { $!membership-type = $t; $.changed; }
+    method set-membership-date (Date $d) { $!membership-date = $d; $.changed; }
+    method set-state (Str $s)            { $!state           = $s; $.changed; }
+    method set-comment (Str $c)          { $!comment         = $c; $.changed; }
+    method set-sigma (Rat $s)            { $!sigma           = $s; $.changed; }
+    method set-flags (Str $f)            { $!flags           = $f; $.changed; }
+    method set-change-callback (&ccb)    { &!change-callback = &ccb; self; }
 
     ######################################
     #
@@ -86,27 +77,26 @@ class Games::Go::AGA::Objects::Player
     # other methods
     #
     method rating-or-rank {
-        with $.rating { $.rating    }
-        orwith $.rank { $.rank      }
+        with $!rating { $!rating    }
+        orwith $!rank { $!rank      }
         else          { '<no-rank>' }
     }
 
     # convenience method to extract an individual named flag
     method flag (Str $key) {
         $!flags ~~ m:i/ << $key '=' (\S+) /;
-        ~$0 if $0.so;
+        ~$0 if $0.defined;
     }
-
     method club { $.flag('Club') }      # required for TDList Club column
 
     method gist {
         (
             $.id,
-            $.last-name ~ ',',
-            $.first-name,
+            $!last-name ~ ($!first-name.so ?? ',' !! ''),
+            $!first-name,
             $.rating-or-rank,
-            $.flags,
-            $.comment,
-        ).grep(/./).join(' ');
+            $!flags,
+            $!comment,
+        ).grep({ .so }).join(' ');
     }
 }

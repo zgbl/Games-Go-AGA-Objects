@@ -21,8 +21,8 @@ class Games::Go::AGA::Objects::Game
     has Non-Neg-Int $.handicap = 0;
     has Rat         $.komi = 7.5;
     has Result      $.result = '?';         # 'w', 'b', or '?'
-    has Rating      $.white-adj;            # adjusted rating as a result of this game
-    has Rating      $.black-adj;
+    has Rating      $.white-adj-rating;     # adjusted rating as a result of this game
+    has Rating      $.black-adj-rating;
     has Str         $.comment = '';         # optional game comment
     has             &.change-callback = method { };
 
@@ -44,16 +44,16 @@ class Games::Go::AGA::Objects::Game
     method un-normalized-black-id { # in case you want your original ID back
         $!black-id;
     }
-    method set-white (AGA-Id $w)         { $!white-id        = $w; $.changed; };
-    method set-black (AGA-Id $b)         { $!black-id        = $b; $.changed; };
-    method set-table-number (Pos-Int $t) { $!table-number    = $t; $.changed; };
-    method set-handicap (Pos-Int $h)     { $!handicap        = $h; $.changed; };
-    method set-komi (Rat $k)             { $!komi            = $k; $.changed; };
-    method set-result (Result $r)        { $!result          = $r; $.changed; };
-    method set-white-adj (Rating $w)     { $!white-adj       = $w; $.changed; };
-    method set-black-adj (Rating $b)     { $!black-adj       = $b; $.changed; };
-    method set-change-callback (&ccb)    { &!change-callback = &ccb; self; };
-    method set-comment($c)               { $!comment         = $c; $.changes; };
+    method set-white (AGA-Id $w)            { $!white-id         = $w; $.changed; };
+    method set-black (AGA-Id $b)            { $!black-id         = $b; $.changed; };
+    method set-table-number (Pos-Int $t)    { $!table-number     = $t; $.changed; };
+    method set-handicap (Non-Neg-Int $h)    { $!handicap         = $h; $.changed; };
+    method set-komi (Rat $k)                { $!komi             = $k; $.changed; };
+    method set-result (Result $r)           { $!result           = $r; $.changed; };
+    method set-white-adj-rating (Rating $w) { $!white-adj-rating = $w; $.changed; };
+    method set-black-adj-rating (Rating $b) { $!black-adj-rating = $b; $.changed; };
+    method set-change-callback (&ccb)       { &!change-callback  = &ccb; self; };
+    method set-comment($c)                  { $!comment          = $c; $.changes; };
 
     ######################################
     #
@@ -83,15 +83,15 @@ class Games::Go::AGA::Objects::Game
             $!handicap,
             $!komi,
         ).grep(*.defined).join(' ');
-        with $!table-number or $!white-adj or $!black-adj {
+        with $!table-number or $!white-adj-rating or $!black-adj-rating {
             $gist ~= ' #';
             with $!table-number {
                 $gist ~= " Tbl $!table-number";
             }
-            with $!white-adj or $!black-adj {
+            with $!white-adj-rating or $!black-adj-rating {
                 $gist ~= " adjusted ratings: " ~ (
-                    $!white-adj || '?',
-                    $!black-adj || '?',
+                    $!white-adj-rating || '?',
+                    $!black-adj-rating || '?',
                 ).join(', ');
             }
         }

@@ -30,8 +30,8 @@ class Games::Go::AGA::Objects::Register::Actions {
     method directive ($/) {
         my $directive = Games::Go::AGA::Objects::Directive.new(
             key => ~$<key>,
-            value => $<value>.so ?? ~$<value> !! '',
-            comment => $<directive-comment>.so ?? ~$<directive-comment> !! '',
+            value => $<value>.defined ?? ~$<value> !! '',
+            comment => $<directive-comment>.defined ?? ~$<directive-comment> !! '',
         );
         make $directive;
     }

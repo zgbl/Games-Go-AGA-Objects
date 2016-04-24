@@ -33,7 +33,7 @@ $dut.set-table-number(3);
 $dut.set-handicap(0);
 $dut.set-komi(-6.5);
 $dut.set-result('w');
-$dut.set-white-adj(4.4);
+$dut.set-white-adj-rating(4.4);
 is $dut.winner, 'TST1',  'winner ID';
 is $dut.loser,  'TST22', 'loser ID';
 is $dut.gist, 'TST1 TST22 w 0 -6.5 # Tbl 3 adjusted ratings: 4.4, ?', 'gist OK';

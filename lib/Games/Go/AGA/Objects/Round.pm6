@@ -41,15 +41,15 @@ class Games::Go::AGA::Objects::Round
     multi method get-game (Int $idx) { @!games[$idx] }
     multi method get-game (AGA-Id $id0, AGA-Id $id1 = $id0) {
         given $.idx-of-game($id0, $id1) {
-            when .so { @!games[$_] }
+            when .defined { @!games[$_] }
         }
     }
 
-    multi method delete-game (Int $idx) { @!games.splice($idx, 1) }
+    multi method delete-game (Int $idx) { @!games.delete($idx) }
     multi method delete-game (AGA-Id $id0, AGA-Id $id1 = $id0) {
         my $idx = $.idx-of-game($id0, $id1);
         return without $idx;
-        my $game = @!games.splice($idx, 1);
+        my $game = @!games.delete($idx);
         $.changed;
         $game;
     }

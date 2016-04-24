@@ -18,14 +18,13 @@ class Games::Go::AGA::Objects::TDList::Actions {
     #
     method TOP ($/) {
         my $m = $<player>;  # the match
-        my %opts = 
-            id              => ~$m<id>,
-            last-name       => ~$m<last-name>;
-        with $m<first-name>      { %opts<first-name>      = ~$m<first-name> }
-        with $m<rating>          { %opts<rating>          =  $m<rating>.Rat }
-        with $m<membership-type> { %opts<membership-type> = ~$m<membership-type> }
-        with $m<club>            { %opts<flags>           = "Club=" ~ $m<club> }
-        with $m<state>           { %opts<state>           = ~$m<state> }
+        my %opts;
+        for <id last-name first-name membership-type state> -> $key {
+            with $m{$key} { %opts{$key} = ~$m{$key} }
+        }
+        # options that need special treatment:
+        with $m<rating>          { %opts<rating> =  $m<rating>.Rat }
+        with $m<club>            { %opts<flags>  = "Club=" ~ $m<club> }
         with $m<membership-date> {
             my @mdy = $m<membership-date>.split(/\D+/);  # split on non-numerics
             %opts<membership-date> = Date.new(+@mdy[2], +@mdy[0], +@mdy[1]);

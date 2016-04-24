@@ -148,7 +148,7 @@ my $ii = 0;
     multi method sth-lib (Str $name) {
         without $.dbh { }   # initialize $.dbh if necessary
         my $sth = %!sth-lib{$name};
-        without ($sth) {
+        without $sth {
             die("No SQL named $name in sth library");
         }
         if $sth ~~ Str {

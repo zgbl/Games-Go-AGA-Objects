@@ -21,8 +21,7 @@ class Games::Go::AGA::Objects::Directive {
     #| Optional comment.
     has Str          $.comment = '';    # optional comment
     #|{ Callback method (invoked against the Directive object) called
-       whenever and of the above attributes are changed.  The default
-       is: method { }.
+       whenever any of the above attributes are changed.  Default: method { }.
     }
     has              &.change-callback = method { };
 
@@ -37,7 +36,7 @@ class Games::Go::AGA::Objects::Directive {
 
     method set-change-callback (&ccb) { &!change-callback = &ccb; self };
     #| Method to invoke the B<change-callback> attribute.  Returns B<self>.
-    method changed { self.&!change-callback(); self; }
+    method changed { say "Dir::changed called";  self.&!change-callback(); self; }
 
     ######################################
     #

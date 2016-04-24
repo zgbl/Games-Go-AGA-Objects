@@ -8,7 +8,7 @@
 use v6;
 
 use Test;
-plan 23;
+plan 24;
 
 # use-ok('Games::Go::AGA::Objects::Directive');          # the module under test
 use Games::Go::AGA::Objects::Directive;     # the module under test
@@ -42,12 +42,15 @@ $dut.set-change-callback( method { $callback-called++ } );
 
 is $dut.key, 'Test_2',  q[key is 'Test_2'];
 is $dut.value, 'test_value_1 tv_2 TV_4',  q[value is good];
+$dut.set-value('New Value');
+is $dut.value, 'New Value',  q[new value is good];
+
 is $dut.comment, '# a comment',  q[comment is '# a comment'];
 $dut.set-comment('a comment');
 is $dut.comment, '# a comment',  q[comment still '# a comment'];
 $dut.set-comment('   #a comment');
 is $dut.comment, '   #a comment',  q[comment now '   #a comment'];
-is $dut.gist, '## Test_2 test_value_1 tv_2 TV_4    #a comment', 'gist is good';
+is $dut.gist, '## Test_2 New Value    #a comment', 'gist is good';
 
 is $dut.booleans, < Aga_rated Test >, 'default booleans';
 is $dut.delete-boolean('AGA_RATED').booleans, 'Test', 'delete a boolean';
@@ -67,5 +70,5 @@ throws-like(
     X::TypeCheck::Assignment,
 );
 
-is $dut.gist, '## Test_2 test_value_1 tv_2 TV_4    #a comment', 'gist is good';
-is $callback-called, 2, 'callback called';
+is $dut.gist, '## Test_2 New Value    #a comment', 'gist is good';
+is $callback-called, 3, 'callback called';

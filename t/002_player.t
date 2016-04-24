@@ -30,7 +30,7 @@ isa-ok($dut, 'Games::Go::AGA::Objects::Player');
 
 is $dut.id, 'TEST1',  q[id is 'TEST1'];
 is $dut.last-name, 'test_value',  q[last-name is 'test_value'];
-is $dut.gist, 'TEST1 test_value, <no-rank>', 'gist OK';
+is $dut.gist, 'TEST1 test_value <no-rank>', 'gist OK';
 
 $dut = Games::Go::AGA::Objects::Player.new(
     id         => 'Test2',
