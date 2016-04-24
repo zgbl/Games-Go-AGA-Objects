@@ -27,7 +27,7 @@ my @match =
     ( '4567', 'Last2',       'First Middle', '4.9', 'DEFG', '',   'Spons', '1992-01-01', ),
     ( '8910', 'Last',        'First',        '0',   '',     'WI', 'Youth', '2012-12-12', ),
     ( '6',    'Corporation', '',             '7',   '',     'CA', '',      '',           ),
-    ( '4',    'Last3',       'First3 M',     '5',   '',     '',   '',      '',           ),
+    ( '4',    'Last3',       'First3 M.',    '5',   '',     '',   '',      '',           ),
     ( '1112', 'Last',        'First M.',     '0',   'HIJK', 'WA', 'Full',  '',           );
 
 my $tdlistdb = Games::Go::AGA::Objects::TDListDB.new(
@@ -44,7 +44,7 @@ for 0 .. @tdlist.end -> $idx {
     $sth.execute($match.[0]);               # ID, the primary key
     my $row = $sth.fetchall_arrayref[0];    # always just one row
     is $row, $match, "row $idx OK";
-    say $row.perl, "\n", $match.perl, ;
+#say $row.perl, "\n", $match.perl, ;
 }
 
 

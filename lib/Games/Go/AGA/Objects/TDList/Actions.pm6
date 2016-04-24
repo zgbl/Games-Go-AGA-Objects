@@ -24,7 +24,7 @@ class Games::Go::AGA::Objects::TDList::Actions {
         with $m<first-name>      { %opts<first-name>      = ~$m<first-name> }
         with $m<rating>          { %opts<rating>          =  $m<rating>.Rat }
         with $m<membership-type> { %opts<membership-type> = ~$m<membership-type> }
-        with $m<club>            { %opts<club>            = "Club=" ~ $m<club> }
+        with $m<club>            { %opts<flags>           = "Club=" ~ $m<club> }
         with $m<state>           { %opts<state>           = ~$m<state> }
         with $m<membership-date> {
             my @mdy = $m<membership-date>.split(/\D+/);  # split on non-numerics

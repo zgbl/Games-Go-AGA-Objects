@@ -86,9 +86,9 @@ class Games::Go::AGA::Objects::Player
     # other methods
     #
     method rating-or-rank {
-        $.rating
-          ?? $.rating 
-          !! $.rank;
+        with $.rating { $.rating    }
+        orwith $.rank { $.rank      }
+        else          { '<no-rank>' }
     }
 
     # convenience method to extract an individual named flag
@@ -104,7 +104,7 @@ class Games::Go::AGA::Objects::Player
             $.id,
             $.last-name ~ ',',
             $.first-name,
-            $.rating-or-rank || '<no-rank>',
+            $.rating-or-rank,
             $.flags,
             $.comment,
         ).grep(/./).join(' ');

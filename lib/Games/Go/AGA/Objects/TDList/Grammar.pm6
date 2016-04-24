@@ -27,14 +27,16 @@ grammar Games::Go::AGA::Objects::TDList::Grammar {
                         [ \h+ <membership-type=.word> ]?
                           \h+ <rating>
                         [ \h+ <membership-date=.date> ]?
-                        [ \h+ <club=.word> ]?
-                        [ \h+ <state=.word> ]?
+                        [ \h+ <club> ]?
+                        [ \h+ <state> ]?
                     }
     token name      { <word> [\h+ <word>]* }
     token id        { \d+ }
     token rating    { '-'? \d+ [ \. \d+ ]? }
     token date      { \d\d? <[-/]> \d\d? <[-/]> \d\d\d?\d? }
-    token alpha     { <[\w] - [\d]> }       # alphas without numeric
+#   token alpha     { <[\w] - [\d]> }       # alphas without numeric
     token alphanum  { <[\w.-]> }            # alphanumerics plus '_' and a few extra chars
+    token state     { <alpha> <alpha> }     # two letters
+    token club      { <alpha> <alpha> <alpha> <alpha> } # four letters
     token word      { <alpha> <alphanum>* } # alpha followed by alphanums (normal words)
 }

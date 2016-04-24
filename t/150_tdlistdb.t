@@ -14,34 +14,34 @@ plan 5;
 use Games::Go::AGA::Objects::TDListDB;     # the module under test
 
 my $col-types = (
+    'id VARCHAR NOT NULL PRIMARY KEY',
     'last_name VARCHAR NOT NULL',
     'first_name VARCHAR',
-    'id VARCHAR NOT NULL PRIMARY KEY',
-    'membership_type VARCHAR',
     'rating VARCHAR',
-    'membership_date VARCHAR',
     'club VARCHAR',
     'state VARCHAR',
+    'membership_type VARCHAR',
+    'membership_date VARCHAR',
 ).join(', ');
 my $cols = (
+    'id',
     'last_name',
     'first_name',
-    'id',
-    'membership_type',
     'rating',
-    'membership_date',
     'club',
     'state',
+    'membership_type',
+    'membership_date',
 ).join(', ');
 my $u-qs = (
+    'id = ?',
     'last_name = ?',
     'first_name = ?',
-    'id = ?',
-    'membership_type = ?',
     'rating = ?',
-    'membership_date = ?',
     'club = ?',
     'state = ?',
+    'membership_type = ?',
+    'membership_date = ?',
 ).join(', ');
 my $i-qs = (
     '?',

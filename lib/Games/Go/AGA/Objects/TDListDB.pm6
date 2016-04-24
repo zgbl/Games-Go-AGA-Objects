@@ -152,7 +152,6 @@ my $ii = 0;
             die("No SQL named $name in sth library");
         }
         if $sth ~~ Str {
-            say "prepare $name = $sth";
             $sth = %!sth-lib{$name} = $.dbh.prepare($sth);
         }
         $sth;
@@ -212,13 +211,11 @@ my $ii = 0;
         $!fh = $fh;
 
         $.my-print("Starting database update at {time}\n") if $!verbose;
-say "Starting database update at {time}\n";
         $.dbh.do('BEGIN');
         my @errors;
         for $fh.lines -> $line {
             next if $line.not;    # skip empty line
 
-say "Line {$fh.ins}: $line";
             if $!verbose {
                 $.my-print('.')  if $fh.ins %% 1000;
                 $.my-print("\n") if $fh.ins %% 40000;
@@ -233,7 +230,6 @@ say "Line {$fh.ins}: $line";
         }
         $.dbh.do('COMMIT');  # make sure we do this!
         $.update_time;
-say "database update done at {time}\n";
         if @errors.elems {
             die("{@errors.elems} errors - aborting:\n@errors");
         }
@@ -249,34 +245,27 @@ say "database update done at {time}\n";
     }
 
     method insert-or-update-player (Games::Go::AGA::Objects::Player $player) {
-say 'calling select_by_id';
         my $sth = $.sth-lib('select_by_id');
         $sth.execute($player.id);
-say 'execute complete';
         my $in-db = $sth.fetchall_arrayref[0];
-say 'fetchall_arrayref complete: ', $in-db.perl;
         if $in-db.so {
             # ID is already in database, do an update
-say 'updating record: ', $.player-column-values($player);
             $.sth-lib('update_id').execute(|$.player-column-values($player), $player.id);
             return self;
         }
         # ID is not in database, insert new record
-say 'inserting new record: ', $.player-column-values($player).perl;
         $.sth-lib('insert_player').execute(|$.player-column-values($player));
         self;
     }
 
     method player-column-values (Games::Go::AGA::Objects::Player $player, Str $joiner = ', ') {
         # return list of $player's values for each database column
-        # @column-sql.map({ .key.map({ say "\$player.$_"; $player.$_ }) }).join($joiner);
         my @keys;
         for @column-sql -> $pair {
             my $key = $pair.key.subst(/_/, '-');    # SQL doesn't like dashes in names
-            my $value = $player."$key"() || '';
-            push @keys, ($key eq 'date')
-              ?? $value.Str
-              !! ~$value;
+            my $value = $player."$key"();
+            $value = '' without $value;
+            push @keys, $value.Str;
         }
         @keys;
     }
