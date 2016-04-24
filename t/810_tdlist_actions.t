@@ -31,7 +31,7 @@ my @match =
     ( '1112', 'Last',        'First M.',     '0',   'HIJK', 'WA', 'Full',  '',           );
 
 my $tdlistdb = Games::Go::AGA::Objects::TDListDB.new(
-    dbdname => 'test_DELETE_ME.sqlite'
+    db-filename => 'test_DELETE_ME.sqlite'
 );
 
 for @tdlist -> $line {

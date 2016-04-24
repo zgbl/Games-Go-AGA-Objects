@@ -94,7 +94,7 @@ my $ii = 0;
 #           exit;
 #       }
 #       print "Updating $.db-filename from file ($.tdlist-filename)\n";
-#       $tdlist.update_from_file($.tdlist-filename);
+#       $tdlist.update-from-file($.tdlist-filename);
 #   }
 
     method dbh {
@@ -197,17 +197,18 @@ my $ii = 0;
         #  $.my-print("Starting $!tdlist-filename fetch from $!url at {time}") if $!verbose;
         #  $!ua.mirror($!url, $!tdlist-filename);
         #  $.my-print("... fetch done at {time}\n") if $!verbose;
-        #  $.update_from_file($!tdlist-filename);
+        #  $.update-from-file($!tdlist-filename);
         #  self
     }
 
-    method update_from_file (Str $filename = $!tdlist-filename) {
+    method update-from-file (Str $filename = $!tdlist-filename) {
         $!tdlist-filename = $filename;
-        $.update-from-fh($filename.IO);
+        my $fh = open $filename, :r;
+        $.update-from-fh($fh);
         self;
     }
 
-    method update-from-fh (IO $fh) {
+    method update-from-fh (IO::Handle $fh) {
         $!fh = $fh;
 
         $.my-print("Starting database update at {time}\n") if $!verbose;
@@ -229,7 +230,7 @@ my $ii = 0;
             last if @errors.elems >= $.max-update-errors;
         }
         $.dbh.do('COMMIT');  # make sure we do this!
-        $.update_time;
+        $.set-update-time;
         if @errors.elems {
             die("{@errors.elems} errors - aborting:\n@errors");
         }
@@ -271,6 +272,10 @@ my $ii = 0;
     }
 
     method my-print (*@a) { self.&!print-callback(@a); self; }
+}
+
+sub MAIN ( Str $filename = 'TDList,txt' ) {
+    Games::Go::AGA::Objects::TDListDB.new().update-from-file($filename);
 }
 
 =begin pod
@@ -345,7 +350,7 @@ The URL to retrieve TDList from.  The default is
 
 =item max-update-errors => integer
 
-An B<update_from_file> or B<update-from-url> counts errors until this
+An B<update-from-file> or B<update-from-url> counts errors until this
 number is reached, at which point the update gives up and throws an
 exception.  The default value is 10.
 
