@@ -21,16 +21,17 @@ class Games::Go::AGA::Objects::Register {
     has Games::Go::AGA::Objects::Directive %!directives;   # hash by key.tclc
     has Games::Go::AGA::Objects::Player    %!players;      # hash by player.id
     has Str                                @!comments;     # array of strings
-    has                                    &.change-callback = method {say "Register::change-callback called"; };
+    has                                    &.change-callback;
 
     method BUILD (:@comments, :@directives, :@players) {
+        &!change-callback = method {};
         @comments.map( { $.add-comment($_) } );
         @directives.map( { $.add-directive($_) } );
         @players.map( { $.add-player($_) } );
     };
 
     method set-change-callback ($ccb) { &!change-callback = $ccb; self; };
-    method changed {say "Register::changed called"; self.&!change-callback(); self; }
+    method changed { self.&!change-callback(); self; }
 
     ######################################
     #
@@ -43,12 +44,12 @@ class Games::Go::AGA::Objects::Register {
 
     multi method add-directive (Games::Go::AGA::Objects::Directive $directive) {
         %!directives{$directive.key.tclc} = $directive;
-        say "Register::add-directive TODO: set directive's change-callback?";
-        my $old-callback = $directive.change-callback;
+        my &old-callback = $directive.change-callback;
+        my $register = self;
         $directive.set-change-callback(
             method {
-                $directive.{$old-callback}; # call directives previous callback
-                $.changed;                  # call our own changed callback
+                $directive.&old-callback; # call directives previous callback
+                $register.changed;        # call our own changed callback
             }
         );
         $.changed;
@@ -64,9 +65,9 @@ class Games::Go::AGA::Objects::Register {
     }
 
     method set-directive (Str $key, Str $value) {
-        my $directive = %!directives($key.tclc);
-        if $directive.defined {
-            $directive.value($value);
+        my $directive = %!directives{$key.tclc};
+        with $directive {
+            $directive.set-value($value);
         }
         else {
             $.add-directive($key, $value);
@@ -97,10 +98,10 @@ class Games::Go::AGA::Objects::Register {
         my $id = $player.id;
         die "Duplicate ID $id" if %!players{$id}.defined;
         %!players{$id} = $player;
-        my $old-callback = $player.change-callback;
+        my &old-callback = $player.change-callback;
         $player.set-change-callback(
             method {
-                $player.{$old-callback};    # call players previous callback
+                $player.{&old-callback};    # call players previous callback
                 $.changed;                  # call our own changed callback
             }
         );

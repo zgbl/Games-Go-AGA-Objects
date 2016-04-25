@@ -38,7 +38,14 @@ $dut = Games::Go::AGA::Objects::Directive.new(
 );
 
 my $callback-called;
-$dut.set-change-callback( method { $callback-called++ } );
+my &old-callback = $dut.change-callback;
+$dut.set-change-callback(
+    method {
+        say '001_directive callback';
+        $dut.&old-callback();
+        $callback-called++;
+    }
+);
 
 is $dut.key, 'Test_2',  q[key is 'Test_2'];
 is $dut.value, 'test_value_1 tv_2 TV_4',  q[value is good];

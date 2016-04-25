@@ -12,17 +12,9 @@ use v6;
 class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
-    #| The directive key like 'Tourney' or 'Date'
     has Str-no-Space $.key is required; # directive name
-    #|{ The value assigned to the key, format specific to each key.
-       Boolean keys (like AGA-Rated) do not have a value.
-    }
     has Str          $.value = '';      # the value string, if any
-    #| Optional comment.
     has Str          $.comment = '';    # optional comment
-    #|{ Callback method (invoked against the Directive object) called
-       whenever any of the above attributes are changed.  Default: method { }.
-    }
     has              &.change-callback = method { };
 
     my %booleans = (    #= class variable: which keys are boolean
@@ -35,8 +27,9 @@ class Games::Go::AGA::Objects::Directive {
     );
 
     method set-change-callback (&ccb) { &!change-callback = &ccb; self };
-    #| Method to invoke the B<change-callback> attribute.  Returns B<self>.
-    method changed { say "Dir::changed called";  self.&!change-callback(); self; }
+    method changed {
+        self.&!change-callback();
+        self; }
 
     ######################################
     #

@@ -52,9 +52,9 @@ my Pair @texts = (
 
 for @texts -> $pair {
     my $actions = Games::Go::AGA::Objects::Register::Actions.new();
-    my $register = Games::Go::AGA::Objects::Register::Grammar.parse($pair.key, :actions($actions)).ast;
+    my $dut = Games::Go::AGA::Objects::Register::Grammar.parse($pair.key, :actions($actions)).ast;
 
-    is($register.gist, $pair.value.chomp, 'gist matches');
+    is($dut.gist, $pair.value.chomp, 'gist matches');
 }
 
 

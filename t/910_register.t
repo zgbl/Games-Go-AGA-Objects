@@ -7,17 +7,27 @@
 ################################################################################
 use v6;
 use Test;
-plan 3;
+plan 5;
 
 use Games::Go::AGA::Objects::Register;          # the module under test
 
-my $register = Games::Go::AGA::Objects::Register.new(
+my $dut = Games::Go::AGA::Objects::Register.new(
     comments => (
         'pre-comment',
         'post pre-comment',
     ),
 );
-is($register.get-comments,
+
+my $callback-called;
+my &old-callback = $dut.change-callback;
+$dut.set-change-callback(
+    method {
+        $dut.&old-callback();
+        $callback-called++;
+    }
+);
+
+is($dut.get-comments,
     (
         '# pre-comment',
         '# post pre-comment',
@@ -27,9 +37,9 @@ is($register.get-comments,
 
 for (1 .. 5) -> $ii {
     my $hash = $ii % 2 ?? '' !! '# ';
-    $register.add-comment($hash ~ "comment $ii");
+    $dut.add-comment($hash ~ "comment $ii");
 }
-is($register.get-comments, (
+is($dut.get-comments, (
         '# pre-comment',
         '# post pre-comment',
         '# comment 1',
@@ -40,12 +50,33 @@ is($register.get-comments, (
     ), 'add 5 comments',
 );
 
-$register.delete-comment( rx/1||2||4/ );
-is($register.get-comments, (
+$dut.delete-comment( rx/1||2||4/ );
+is($dut.get-comments, (
         '# pre-comment',
         '# post pre-comment',
         '# comment 3',
         '# comment 5',
-    ), 'add 5 comments',
+    ), 'remove 3 comments',
 );
 
+$dut.add-directive('AAA', 'Abc');
+$dut.add-directive(
+    Games::Go::AGA::Objects::Directive.new(
+        key => 'BBbb',
+        value => 'BbB bb bbb',
+        comment => 'bbb comment',
+    ),
+);
+$dut.set-directive('AccCcc', 'Ccc ccc ccC');
+$dut.set-directive('bbbb', 'new bbb');
+my $expect = (
+    '# pre-comment',
+    '# post pre-comment',
+    '# comment 3',
+    '# comment 5',
+    '## AAA Abc',
+    '## BBbb new bbb # bbb comment',
+    '## AccCcc Ccc ccc ccC').join("\n");
+
+is $dut.gist, $expect, 'gist OK';
+is $callback-called, 10, 'callback-called';

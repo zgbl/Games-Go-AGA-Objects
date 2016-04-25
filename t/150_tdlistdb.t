@@ -57,6 +57,7 @@ my $i-qs = (
 my $dut = Games::Go::AGA::Objects::TDListDB.new(
     db-filename => 'test_DELETE_ME.sqlite',
 );
+
 isa-ok($dut, 'Games::Go::AGA::Objects::TDListDB');
 is $dut.sql-column-types, $col-types, 'sql-column-types';
 is $dut.sql-columns, $cols, 'sql-columns';
