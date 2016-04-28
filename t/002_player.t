@@ -30,7 +30,7 @@ isa-ok($dut, 'Games::Go::AGA::Objects::Player');
 
 is $dut.id, 'TEST1',  q[id is 'TEST1'];
 is $dut.last-name, 'test_value',  q[last-name is 'test_value'];
-is $dut.gist, 'TEST1 test_value <no-rank>', 'gist OK';
+is $dut.sprint, 'TEST1 test_value <no-rank>', 'sprint OK';
 
 $dut = Games::Go::AGA::Objects::Player.new(
     id         => 'Test2',
@@ -48,6 +48,6 @@ is $dut.rating, -4.8, 'correct rating';
 $dut.set-rank('4d');
 is $dut.rank, '4D', 'correct rank';
 is $dut.rating.so, False, 'rating Niled';
-is $dut.gist, 'TEST2 Last Name, First Name 4D Club=FooB Xyz=ABC', 'gist OK';
+is $dut.sprint, 'TEST2 Last Name, First Name 4D Club=FooB Xyz=ABC', 'sprint OK';
 is $dut.club, 'FooB', 'club OK';
 is $callback-called, 2, 'callback called';

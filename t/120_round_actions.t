@@ -33,7 +33,7 @@ for @texts -> $pair {
     my $actions = Games::Go::AGA::Objects::Round::Actions.new();
     my $round = Games::Go::AGA::Objects::Round::Grammar.parse($pair.key, :actions($actions)).ast;
 
-    is($round.gist, $pair.value.chomp, 'gist matches');
+    is($round.sprint, $pair.value.chomp, 'sprint matches');
 }
 
 

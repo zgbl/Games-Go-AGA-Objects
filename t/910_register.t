@@ -75,8 +75,9 @@ my $expect = (
     '# comment 3',
     '# comment 5',
     '## AAA Abc',
+    '## AccCcc Ccc ccc ccC',
     '## BBbb new bbb # bbb comment',
-    '## AccCcc Ccc ccc ccC').join("\n");
+).join("\n");
 
-is $dut.gist, $expect, 'gist OK';
+is $dut.sprint, $expect, 'sprint OK';
 is $callback-called, 10, 'callback-called';

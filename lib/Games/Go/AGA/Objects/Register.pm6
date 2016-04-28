@@ -171,14 +171,13 @@ class Games::Go::AGA::Objects::Register {
     #
     #   other methods
     #
-    method gist {
-        my @gist;
-        @gist.append(
+    method sprint {
+        append(
             @!comments,
         ).append(
-            %!directives.values.sort,
+            %!directives.sort.map({ .value.sprint }),
         ).append(
-            %!players.values.sort,
-        ).map( *.gist ).join("\n");
+            %!players.sort.map({ .value.sprint }),
+        ).join("\n");
     }
 }

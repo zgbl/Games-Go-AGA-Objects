@@ -31,8 +31,8 @@ class Games::Go::AGA::Objects::Player
         $!normalized-id = $.normalize-id($!id) if $!normalized-id.not;
         $!normalized-id;
     }
-    method un-normalized-id { # in case you want your original ID back
-        $.id;
+    method id_original { # in case you want your original ID back
+        $!id;
     }
 
     ######################################
@@ -89,7 +89,7 @@ class Games::Go::AGA::Objects::Player
     }
     method club { $.flag('Club') }      # required for TDList Club column
 
-    method gist {
+    method sprint {
         (
             $.id,
             $!last-name ~ ($!first-name.so ?? ',' !! ''),

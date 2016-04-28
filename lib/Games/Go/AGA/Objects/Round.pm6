@@ -66,10 +66,10 @@ class Games::Go::AGA::Objects::Round
         return; # undef
     }
 
-    method gist {
+    method sprint {
         (
             "# Round $!round-number",
-            |@!games>>.gist,
+            |@!games>>.sprint,
         ).join("\n");
     }
 }

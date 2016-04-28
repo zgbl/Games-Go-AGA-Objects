@@ -96,10 +96,10 @@ class Games::Go::AGA::Objects::Directive {
     # other methods
     #
 
-    method gist {
-        my $gist = "## $!key";
-        $gist ~= " $.value" if $!value ne '';
-        $gist ~= " $.comment" if $.comment ne '';
-        $gist;
+    method sprint {
+        my $sprint = "## $!key";
+        $sprint ~= " $.value" if $!value ne '';
+        $sprint ~= " $.comment" if $.comment ne '';
+        $sprint;
     }
 }

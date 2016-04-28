@@ -75,8 +75,8 @@ class Games::Go::AGA::Objects::Game
         }
     }
 
-    method gist {
-        my $gist = (
+    method sprint {
+        my $sprint = (
             $.white-id,
             $.black-id,
             $!result,
@@ -84,17 +84,17 @@ class Games::Go::AGA::Objects::Game
             $!komi,
         ).grep(*.defined).join(' ');
         with $!table-number or $!white-adj-rating or $!black-adj-rating {
-            $gist ~= ' #';
+            $sprint ~= ' #';
             with $!table-number {
-                $gist ~= " Tbl $!table-number";
+                $sprint ~= " Tbl $!table-number";
             }
             with $!white-adj-rating or $!black-adj-rating {
-                $gist ~= " adjusted ratings: " ~ (
+                $sprint ~= " adjusted ratings: " ~ (
                     $!white-adj-rating || '?',
                     $!black-adj-rating || '?',
                 ).join(', ');
             }
         }
-        $gist;
+        $sprint;
     }
 }

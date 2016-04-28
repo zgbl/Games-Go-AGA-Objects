@@ -40,10 +40,10 @@ my Pair @texts = (
     qq:to/END/
         # a comment
         # another comment
-        ## Tourney Test  Tournament
+        ## AGA
         ## Date 2016/04/05
         ## Rounds 3
-        ## AGA
+        ## Tourney Test  Tournament
         TMP1 Augustin, Reid 5D Club=PALO BYE Drop3
         TMP11 Augustin, Abc 4K # with a comment
         USA11 Abc, Abc 4.4 DROP2 # 4 dan
@@ -54,7 +54,7 @@ for @texts -> $pair {
     my $actions = Games::Go::AGA::Objects::Register::Actions.new();
     my $dut = Games::Go::AGA::Objects::Register::Grammar.parse($pair.key, :actions($actions)).ast;
 
-    is($dut.gist, $pair.value.chomp, 'gist matches');
+    is($dut.sprint, $pair.value.chomp, 'sprint matches');
 }
 
 

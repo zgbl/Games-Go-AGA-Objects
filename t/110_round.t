@@ -43,12 +43,12 @@ $dut.add-game(
         change-callback => method { $dut.changed },
     ),
 );
-is $dut.gist, "# Round 1\nTST1 TST22 ? 0 7.5\nTST101 TST1022 ? 0 0.5", 'gist OK';
+is $dut.sprint, "# Round 1\nTST1 TST22 ? 0 7.5\nTST101 TST1022 ? 0 0.5", 'sprint OK';
 
 $dut.get-game(0).set-result('w');
 $dut.get-game('Tst1022', 'Tst101').set-result('b');
 is $dut.get-game(0).winner, 'TST1',   'right winner in first game';
 is $dut.get-game('Tst1022').loser,  'TST101', 'right loser in second game';
 is $callback-called, 4, 'callback called';
-is $dut.gist, "# Round 1\nTST1 TST22 w 0 7.5\nTST101 TST1022 b 0 0.5", 'gist OK';
+is $dut.sprint, "# Round 1\nTST1 TST22 w 0 7.5\nTST101 TST1022 b 0 0.5", 'sprint OK';
 

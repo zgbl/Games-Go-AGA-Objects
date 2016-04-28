@@ -8,7 +8,7 @@
 use v6;
 
 use Test;
-plan 24;
+plan 26;
 
 # use-ok('Games::Go::AGA::Objects::Directive');          # the module under test
 use Games::Go::AGA::Objects::Directive;     # the module under test
@@ -19,14 +19,14 @@ my $dut = Games::Go::AGA::Objects::Directive.new(
 isa-ok($dut, 'Games::Go::AGA::Objects::Directive');
 is $dut.key, 'Aga-rated',  q[key is 'Aga-rated'];
 is $dut.value, '',  q[value is ''];
-is $dut.gist, '## Aga-rated', 'gist OK';
+is $dut.sprint, '## Aga-rated', 'sprint OK';
 
 $dut = Games::Go::AGA::Objects::Directive.new(
     key    => 'TEST',
     value  => 'test_value',
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Directive');
-is $dut.gist, '## TEST test_value', 'gist OK';
+is $dut.sprint, '## TEST test_value', 'sprint OK';
 
 is $dut.key, 'TEST',  q[key is 'TEST'];
 is $dut.value, 'test_value',  q[value is 'test_value'];
@@ -41,7 +41,6 @@ my $callback-called;
 my &old-callback = $dut.change-callback;
 $dut.set-change-callback(
     method {
-        say '001_directive callback';
         $dut.&old-callback();
         $callback-called++;
     }
@@ -57,15 +56,17 @@ $dut.set-comment('a comment');
 is $dut.comment, '# a comment',  q[comment still '# a comment'];
 $dut.set-comment('   #a comment');
 is $dut.comment, '   #a comment',  q[comment now '   #a comment'];
-is $dut.gist, '## Test_2 New Value    #a comment', 'gist is good';
+is $dut.sprint, '## Test_2 New Value    #a comment', 'sprint is good';
 
 is $dut.booleans, < Aga_rated Test >, 'default booleans';
+is $dut.is-boolean(<AGA_Rated>).so, True, 'AGA_Rated is boolean';
 is $dut.delete-boolean('AGA_RATED').booleans, 'Test', 'delete a boolean';
 is $dut.add-boolean('foo').booleans, < Foo Test >, 'add a boolean';
 
 is $dut.lists, < Date Online_registration >, 'default lists';
 is $dut.delete-list('Online_registration').lists, 'Date', 'delete a list';
 is $dut.add-list('foo').lists, < Date Foo >, 'add a list';
+is $dut.is-list('FOO').so, True, 'Foo is a list';
 
 throws-like(
     {
@@ -77,5 +78,6 @@ throws-like(
     X::TypeCheck::Assignment,
 );
 
-is $dut.gist, '## Test_2 New Value    #a comment', 'gist is good';
+is $dut.sprint, '## Test_2 New Value    #a comment', 'sprint is good';
 is $callback-called, 3, 'callback called';
+
