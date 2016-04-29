@@ -7,7 +7,7 @@
 ################################################################################
 use v6;
 use Test;
-plan 5;
+plan 6;
 
 use Games::Go::AGA::Objects::Register;          # the module under test
 
@@ -21,8 +21,8 @@ my $dut = Games::Go::AGA::Objects::Register.new(
 my $callback-called;
 my &old-callback = $dut.change-callback;
 $dut.set-change-callback(
-    method {
-        $dut.&old-callback();
+    sub {
+        &old-callback();
         $callback-called++;
     }
 );
@@ -59,25 +59,35 @@ is($dut.get-comments, (
     ), 'remove 3 comments',
 );
 
-$dut.add-directive('AAA', 'Abc');
-$dut.add-directive(
+$dut.set-directive('AAA', 'Abc');
+$dut.set-directive(
     Games::Go::AGA::Objects::Directive.new(
         key => 'BBbb',
         value => 'BbB bb bbb',
         comment => 'bbb comment',
     ),
 );
-$dut.set-directive('AccCcc', 'Ccc ccc ccC');
-$dut.set-directive('bbbb', 'new bbb');
 my $expect = (
     '# pre-comment',
     '# post pre-comment',
     '# comment 3',
     '# comment 5',
     '## AAA Abc',
-    '## AccCcc Ccc ccc ccC',
-    '## BBbb new bbb # bbb comment',
+    '## BBbb BbB bb bbb # bbb comment',
 ).join("\n");
-
 is $dut.sprint, $expect, 'sprint OK';
+
+$dut.set-directive('AccCcc', 'Ccc ccc ccC');
+$dut.set-directive('bbbb   new bbb    #  BBBB comment');
+$expect = (
+    '# pre-comment',
+    '# post pre-comment',
+    '# comment 3',
+    '# comment 5',
+    '## AAA Abc',
+    '## AccCcc Ccc ccc ccC',
+    '## bbbb new bbb #  BBBB comment',
+).join("\n");
+is $dut.sprint, $expect, 'sprint OK';
+
 is $callback-called, 10, 'callback-called';

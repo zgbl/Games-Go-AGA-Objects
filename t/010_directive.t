@@ -41,8 +41,8 @@ $dut = Games::Go::AGA::Objects::Directive.new(
 my $callback-called;
 my &old-callback = $dut.change-callback;
 $dut.set-change-callback(
-    method {
-        $dut.&old-callback();
+    sub {
+        &old-callback();
         $callback-called++;
     }
 );
@@ -81,19 +81,4 @@ throws-like(
 
 is $dut.sprint, '## Test_2 New Value    #a comment', 'sprint is good';
 is $callback-called, 3, 'callback called';
-
-$dut = Games::Go::AGA::Objects::Directive.new('CCC');
-is $dut.key, 'CCC', 'str key';
-is $dut.value, Nil, 'str no value';
-is $dut.comment, Nil, 'str no comment';
-
-$dut = Games::Go::AGA::Objects::Directive.new('CCC foobar');
-is $dut.key, 'CCC', 'str key';
-is $dut.value, 'foobar', 'str value';
-is $dut.comment, Nil, 'str no comment';
-
-$dut = Games::Go::AGA::Objects::Directive.new('CCC foobar    # cOmEnT  ');
-is $dut.key, 'CCC', 'str key';
-is $dut.value, 'foobar', 'str value';
-is $dut.comment, '# cOmEnT', 'str comment';
 
