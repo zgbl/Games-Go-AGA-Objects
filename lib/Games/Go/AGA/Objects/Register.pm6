@@ -23,11 +23,15 @@ class Games::Go::AGA::Objects::Register {
     has Str                                @!comments;     # array of strings
     has                                    &.change-callback;
 
-    method BUILD (:@comments, :@directives, :@players) {
-        &!change-callback = method {};
-        @comments.map( { $.add-comment($_) } );
-        @directives.map( { $.add-directive($_) } );
-        @players.map( { $.add-player($_) } );
+    submethod BUILD (:&change-callback = method {}, :@comments,
+                     :@directives, :@players) {
+        &!change-callback = &change-callback;
+        @comments.map( { $!_add-comment($_) } );
+        @directives.map( {
+            if not $_ ~~ Games::Go::AGA::Objects::Directive {
+            }
+            $!_add-directive($_) } );
+        @players.map( { $!_add-player($_) } );
     };
 
     method set-change-callback ($ccb) { &!change-callback = $ccb; self; };
@@ -55,11 +59,22 @@ class Games::Go::AGA::Objects::Register {
         $.changed;
         self;
     }
-    multi method add-directive (Str $key, Str $value) {
+    multi method add-directive (Str $key, Str $value?, Str $comment?) {
         $.add-directive(
             Games::Go::AGA::Objects::Directive.new(
-                key   => $key,
-                value => $value,
+                key     => $key,
+                value   => defined $value ?? $value :: '1',
+                comment => $comment,
+            ),
+        );
+    }
+    multi method add-directive (Str $str) {
+        $str.match(/^ \s* (\w+) \s+ (<-[#]>*) \s* (.*)/);
+        $.add-directive(
+            Games::Go::AGA::Objects::Directive.new(
+                key     => $0,
+                value   => $1,
+                comment => $2,
             ),
         );
     }
@@ -94,7 +109,8 @@ class Games::Go::AGA::Objects::Register {
         @players.map({ .add-player(*) });
     }
 
-    method add-player (Games::Go::AGA::Objects::Player $player) {
+    method add-player (Games::Go::AGA::Objects::Player $player) { $!_add-player($player) }
+    method !_add-player (Games::Go::AGA::Objects::Player $player) {
         my $id = $player.id;
         die "Duplicate ID $id" if %!players{$id}.defined;
         %!players{$id} = $player;
@@ -128,7 +144,8 @@ class Games::Go::AGA::Objects::Register {
         @comments.map({ .add-comment(*) });
     }
 
-    method add-comment (Str $comment) {
+    method add-comment (Str $comment) { $!_add-player($comment) }
+    method !_add-comment (Str $comment) {
         my @comments = $comment.split("\n");    # multi-line?
         for @comments -> $comment {
             # ensure each line is valid comment

@@ -13,7 +13,8 @@ plan 26;
 # use-ok('Games::Go::AGA::Objects::Directive');          # the module under test
 use Games::Go::AGA::Objects::Directive;     # the module under test
 
-my $dut = Games::Go::AGA::Objects::Directive.new(
+my $dut;
+$dut = Games::Go::AGA::Objects::Directive.new(
     key    => 'Aga-rated',
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Directive');
@@ -80,4 +81,19 @@ throws-like(
 
 is $dut.sprint, '## Test_2 New Value    #a comment', 'sprint is good';
 is $callback-called, 3, 'callback called';
+
+$dut = Games::Go::AGA::Objects::Directive.new('CCC');
+is $dut.key, 'CCC', 'str key';
+is $dut.value, Nil, 'str no value';
+is $dut.comment, Nil, 'str no comment';
+
+$dut = Games::Go::AGA::Objects::Directive.new('CCC foobar');
+is $dut.key, 'CCC', 'str key';
+is $dut.value, 'foobar', 'str value';
+is $dut.comment, Nil, 'str no comment';
+
+$dut = Games::Go::AGA::Objects::Directive.new('CCC foobar    # cOmEnT  ');
+is $dut.key, 'CCC', 'str key';
+is $dut.value, 'foobar', 'str value';
+is $dut.comment, '# cOmEnT', 'str comment';
 

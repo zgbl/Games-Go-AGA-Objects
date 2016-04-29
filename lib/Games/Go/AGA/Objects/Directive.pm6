@@ -15,7 +15,7 @@ class Games::Go::AGA::Objects::Directive {
     has Str-no-Space $.key is required; # directive name
     has Str          $.value = '';      # the value string, if any
     has Str          $.comment = '';    # optional comment
-    has              &.change-callback = method { };
+    has              &!change-callback;
 
     my %booleans = (    #= class variable: which keys are boolean
         Test => 1,
@@ -26,6 +26,22 @@ class Games::Go::AGA::Objects::Directive {
         Online_registration => 1,
     );
 
+    submethod BUILD (Str $str-key, Str $str-value?, Str $str-comment?,
+                        :$key, :$value, :$comment, :&change-callback ) {
+
+        $str-key.match(/^ \s* (\w+) \s+ (<-[#]>*) \s* (.*)/);
+        with $0 { $!key = $0 } else { die 'No key' }
+        with $1 { $!value = $1 }
+        with $2 { $!comment = $2 }
+        #&!change-callback = method { }  # must install callback after build with positionals
+        with $key {$!key = $key}
+        with $value {$!value = $value}
+        with $comment {$!comment = $comment}
+        with &change-callback {&!change-callback = &change-callback}
+        else {&!change-callback = method { }}
+    }
+
+    method     change-callback        { &!change-callback              };
     method set-change-callback (&ccb) { &!change-callback = &ccb; self };
     method changed {
         self.&!change-callback();
