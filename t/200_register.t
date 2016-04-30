@@ -91,3 +91,5 @@ $expect = (
 is $dut.sprint, $expect, 'sprint OK';
 
 is $callback-called, 10, 'callback-called';
+
+# vim: expandtab shiftwidth=4 ft=perl6

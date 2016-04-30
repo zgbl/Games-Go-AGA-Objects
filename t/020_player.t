@@ -51,3 +51,5 @@ is $dut.rating.so, False, 'rating Niled';
 is $dut.sprint, 'TEST2 Last Name, First Name 4D Club=FooB Xyz=ABC', 'sprint OK';
 is $dut.club, 'FooB', 'club OK';
 is $callback-called, 2, 'callback called';
+
+# vim: expandtab shiftwidth=4 ft=perl6

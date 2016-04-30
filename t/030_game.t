@@ -38,3 +38,5 @@ is $dut.winner, 'TST1',  'winner ID';
 is $dut.loser,  'TST22', 'loser ID';
 is $dut.sprint, 'TST1 TST22 w 0 -6.5 # Tbl 3 adjusted ratings: 4.4, ?', 'sprint OK';
 is $callback-called, 5, 'callback called';
+
+# vim: expandtab shiftwidth=4 ft=perl6

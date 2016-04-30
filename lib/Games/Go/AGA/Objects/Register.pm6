@@ -48,11 +48,11 @@ class Games::Go::AGA::Objects::Register {
     multi method set-directive (Games::Go::AGA::Objects::Directive $directive) { self!_set-directive($directive) }
     method !_set-directive (Games::Go::AGA::Objects::Directive $directive) {
         %!directives{$directive.key.tclc} = $directive;
-        my &old-callback = $directive.change-callback;
+        my &prev-callback = $directive.change-callback;
         my $register = self;
         $directive.set-change-callback(
             sub {
-                &old-callback();    # call directives previous callback
+                &prev-callback();    # call directives previous callback
                 $register.changed;  # call our own changed callback
             }
         );
@@ -105,10 +105,10 @@ class Games::Go::AGA::Objects::Register {
         my $id = $player.id;
         die "Duplicate ID $id" if %!players{$id}.defined;
         %!players{$id} = $player;
-        my &old-callback = $player.change-callback;
+        my &prev-callback = $player.change-callback;
         $player.set-change-callback(
             sub {
-                &old-callback();    # call players previous callback
+                &prev-callback();    # call players previous callback
                 $.changed;          # call our own changed callback
             }
         );
@@ -189,3 +189,5 @@ class Games::Go::AGA::Objects::Register {
         ).join("\n");
     }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

@@ -57,4 +57,4 @@ for @texts -> $pair {
     is($dut.sprint, $pair.value.chomp, 'sprint matches');
 }
 
-
+# vim: expandtab shiftwidth=4 ft=perl6

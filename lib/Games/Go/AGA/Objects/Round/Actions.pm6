@@ -40,3 +40,5 @@ class Games::Go::AGA::Objects::Round::Actions {
     }
 }
 
+
+# vim: expandtab shiftwidth=4 ft=perl6

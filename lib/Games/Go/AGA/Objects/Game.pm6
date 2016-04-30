@@ -24,7 +24,7 @@ class Games::Go::AGA::Objects::Game
     has Rating      $.white-adj-rating;     # adjusted rating as a result of this game
     has Rating      $.black-adj-rating;
     has Str         $.comment = '';         # optional game comment
-    has             &.change-callback = method { };
+    has             &.change-callback = sub { };
 
     ######################################
     #
@@ -59,7 +59,7 @@ class Games::Go::AGA::Objects::Game
     #
     # methods
     #
-    method changed { self.&!change-callback(); self; }
+    method changed { &!change-callback(); self; }
 
     method winner {
         given $!result {
@@ -98,3 +98,5 @@ class Games::Go::AGA::Objects::Game
         $sprint;
     }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

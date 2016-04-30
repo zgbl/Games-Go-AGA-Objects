@@ -23,7 +23,11 @@ my $dut = Games::Go::AGA::Objects::Tournament.new(
             value => 'Test Tournament 1',
             comment => 'tourney comment',
         ),
-        'DATE 2016/04/28 # date comment',
+        Games::Go::AGA::Objects::Directive.new(
+            key => 'DATE',
+            value => '2016/04/28',
+            comment => '# date comment',
+        ),
     ),
     players => (
         Games::Go::AGA::Objects::Player.new(
@@ -43,21 +47,23 @@ my $dut = Games::Go::AGA::Objects::Tournament.new(
     ),
 );
 
-my $callback-called;
-my $game-callback-called;
+my $expect = (
+    '# comment',
+    '## DATE 2016/04/28 # date comment',
+    '## Tourney Test Tournament 1 # tourney comment',
+    'TST1 Last Name 1, First Name 1 4D Club=ABCD',
+    'TST22 Last Name 22, First Name 22 5D Club=FooB Xyz=ABC',
+).join("\n");
+
+my $callback-called = 0;
+my $game-callback-called = 0;
 my &old-callback = $dut.change-callback;
 $dut.set-change-callback(
     method {
-        $dut.&old-callback();
+        &old-callback();
         $callback-called++;
     }
 );
-
-my $expect = (
-).join("\n");
-
-is $dut.sprint, $expect, 'sprint OK';
-is $callback-called, 10, 'callback-called';
 
 my $game = Games::Go::AGA::Objects::Game.new(
     white-id => 'Tst1',
@@ -70,6 +76,7 @@ throws-like(
     { $dut.round(1).add-game( $game ); },
     X::AdHoc,
 );
+say 'Add player';
 $dut.add-player(Games::Go::AGA::Objects::Player.new(
     id         => 'Tst033',
     last-name  => 'Last Name33',
@@ -77,12 +84,22 @@ $dut.add-player(Games::Go::AGA::Objects::Player.new(
     rank       => '3D',
 ));
 
-$dut.round(1).add-game(
+say 'Add game';
+$dut.add-game(1,
     Games::Go::AGA::Objects::Game.new(
-        white-id => 'Tst1',
-        black-id => 'TST033',
+        white-id => 'TST1',
+        black-id => 'TST33',
         komi     => 0.5,
         handicap => 2,
-        change-callback => method { $game-callback-called++ },
-    );
+        change-callback => sub { $game-callback-called++ },
+    ),
 );
+
+$expect ~= "\nTST33 Last Name33, First Name33 3D";
+is $dut.sprint, $expect, 'sprint OK';
+
+is $callback-called, 10, 'callback-called';
+is $game-callback-called, 10, 'game-callback-called';
+
+
+# vim: expandtab shiftwidth=4 ft=perl6

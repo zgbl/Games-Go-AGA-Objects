@@ -493,3 +493,5 @@ Calls B<print-callback> with B<@args>.
 =item Games::Go::AGA::Objects::TDList::Actions
 
 =end pod
+
+# vim: expandtab shiftwidth=4 ft=perl6

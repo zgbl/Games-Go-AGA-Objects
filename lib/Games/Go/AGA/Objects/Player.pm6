@@ -25,7 +25,7 @@ class Games::Go::AGA::Objects::Player
     has Str    $.comment         = '';
     has Num    $.sigma;                # for the calculating ratings
     has Str    $.flags           = ''; # other flags
-    has        &.change-callback = method { };
+    has        &.change-callback = sub { };
 
     method id { # override accessor to normalize IDs
         $!normalized-id = $.normalize-id($!id) if $!normalized-id.not;
@@ -56,7 +56,7 @@ class Games::Go::AGA::Objects::Player
     #
     # methods
     #
-    method changed { self.&!change-callback(); self; }
+    method changed { &!change-callback(); self; }
 
     multi method rank-to-rating ( Rating $rating ) { $rating } # already a Rating
     # rank is coarse-grained.  return middle of rating range.
@@ -100,3 +100,5 @@ class Games::Go::AGA::Objects::Player
         ).grep({ .so }).join(' ');
     }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

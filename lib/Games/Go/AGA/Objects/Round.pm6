@@ -18,24 +18,25 @@ class Games::Go::AGA::Objects::Round
     has                       Pos-Int $.round-number is required;
     has Games::Go::AGA::Objects::Game @.games;  # games
     has                           Int $.next-table-number = 1;
-    has                               &.change-callback = method { };
+    has                               &.change-callback = sub { };
 
     ######################################
     #
     # accessors
     #
-    method set-change-callback ($ccb) { &!change-callback = $ccb };
+    method set-change-callback ($ccb) { &!change-callback = $ccb; self };
 
     ######################################
     #
     # methods
     #
     method get-next-table-number { $!next-table-number++; }
-    method changed { self.&!change-callback(); self; }
+    method changed { &!change-callback(); self; }
 
     method add-game (Games::Go::AGA::Objects::Game $game) {
         @!games.push($game);
         $.changed;
+        self;
     }
 
     multi method get-game (Int $idx) { @!games[$idx] }
@@ -51,7 +52,7 @@ class Games::Go::AGA::Objects::Round
         return without $idx;
         my $game = @!games.delete($idx);
         $.changed;
-        $game;
+        self;
     }
 
     method idx-of-game (AGA-Id $id0 is copy, AGA-Id $id1 is copy = $id0) {
@@ -73,3 +74,5 @@ class Games::Go::AGA::Objects::Round
         ).join("\n");
     }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

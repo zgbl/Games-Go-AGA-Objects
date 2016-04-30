@@ -52,3 +52,5 @@ is $dut.get-game('Tst1022').loser,  'TST101', 'right loser in second game';
 is $callback-called, 4, 'callback called';
 is $dut.sprint, "# Round 1\nTST1 TST22 w 0 7.5\nTST101 TST1022 b 0 0.5", 'sprint OK';
 
+
+# vim: expandtab shiftwidth=4 ft=perl6

@@ -65,3 +65,5 @@ is $dut.sql-update-qs, $u-qs, 'sql-update-qs';
 is $dut.sql-insert-qs, $i-qs, 'sql-insert-qs';
 
 $dut.my-print('Test my-print');
+
+# vim: expandtab shiftwidth=4 ft=perl6

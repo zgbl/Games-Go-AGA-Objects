@@ -48,3 +48,5 @@ for 0 .. @tdlist.end -> $idx {
 }
 
 
+
+# vim: expandtab shiftwidth=4 ft=perl6

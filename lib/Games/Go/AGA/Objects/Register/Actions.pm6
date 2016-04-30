@@ -31,13 +31,13 @@ class Games::Go::AGA::Objects::Register::Actions {
         my $directive = Games::Go::AGA::Objects::Directive.new(
             key => ~$<key>,
             value => $<value>.defined ?? ~$<value> !! '',
-            comment => $<directive-comment>.defined ?? ~$<directive-comment> !! '',
+            comment => $<directive-comment>.defined ?? $<directive-comment>.trim !! '',
         );
         make $directive;
     }
 
     method line-comment ($/) {
-        make $/.Str.trim;   # simple string, trim leading and trailing whitespace
+        make $/.trim;   # simple string, trim leading and trailing whitespace
     }
 
     method player ($/) {
@@ -46,7 +46,7 @@ class Games::Go::AGA::Objects::Register::Actions {
             last-name  => ~$<last-name>,
             first-name => $<first-name> ?? ~$<first-name> !! '',
             flags      => $<flags> ?? ~$<flags> !! '',
-            comment    => $<player-comment> ?? ~$<player-comment>.trim !! '',
+            comment    => $<player-comment> ?? $<player-comment>.trim !! '',
         );
         $player.set-rank(~$<rank>) if $<rank>;
         $player.set-rating(+~$<rating>) if $<rating>;
@@ -54,3 +54,4 @@ class Games::Go::AGA::Objects::Register::Actions {
     }
 }
 
+# vim: expandtab shiftwidth=4 ft=perl6

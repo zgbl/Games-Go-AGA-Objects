@@ -9,6 +9,7 @@
 use v6;
 
 use Games::Go::AGA::Objects::Types;
+use Games::Go::AGA::Objects::Game;
 use Games::Go::AGA::Objects::Round;
 use Games::Go::AGA::Objects::Register;
 use Games::Go::AGA::Objects::ID_Normalizer_Role;
@@ -23,7 +24,8 @@ class Games::Go::AGA::Objects::Tournament
     has Bool                           $!change-pending = False;
 
     submethod BUILD (:@rounds, :$suppress-changes, :$change-pending) {
-        @rounds.map( { $.add-rounds($_) } );
+        @rounds.map( { self!add-round($_) } );
+        %!player-stats = [];
     };
 
     method set-suppress-changes (Bool $val) { $!suppress-changes = $val; self; }
@@ -31,23 +33,24 @@ class Games::Go::AGA::Objects::Tournament
     method changed {
         if not $!suppress-changes {
             $!change-pending = True;
-            self.&!change-callback();
+            &.change-callback();
         }
         self;
     }
 
-    method add-round (Games::Go::AGA::Objects::Round $round) {
+    method  add-round (Games::Go::AGA::Objects::Round $round) { self!add-round($round) }
+    method !add-round (Games::Go::AGA::Objects::Round $round) {
         $.replace-round($round, $.rounds + 1 || 1);
         self;
     }
     method replace-round (Games::Go::AGA::Objects::Round $round, Int $idx) {
         @!rounds[$idx] = $round;
         my $self = self;
-        my &prev-ccb = $round.change-callback;
-        $round.change-callback(
+        my &prev-callback = $round.change-callback;
+        $round.set-change-callback(
             sub {
                 $self.clear-player-stats;   # force re-count
-                $round.&prev-ccb();
+                &prev-callback();
             }
         );
         self;
@@ -64,6 +67,22 @@ class Games::Go::AGA::Objects::Tournament
     #
     # list of all games in the tournament
     method games { @!rounds.grep({ .so }).map({ |.games }); }
+    multi method game (Int $round-num, Int $idx) {
+        @!rounds.[$round-num].game($idx)
+    }
+    multi method game (Int $round-num, AGA-Id $id0, AGA-Id $id1?) {
+        @!rounds.[$round-num].game($id0, $id1)
+    }
+    method add-game (Int $round-num, Games::Go::AGA::Objects::Game $game) {
+        without @!rounds[$round-num] {
+            $.add-round(
+                Games::Go::AGA::Objects::Round.new(
+                    round-number => $round-num,
+                ),
+            );
+        }
+        @!rounds[$round-num].add-game($game);
+    }
     method count-player-stats {
         for $.games -> $game {
             my $white = $game.white;
@@ -86,9 +105,9 @@ class Games::Go::AGA::Objects::Tournament
         }
         self;
     }
-    method clear-player-stats { %!player-stats = Nil }
+    method clear-player-stats { %!player-stats = [] }
     method player-stats (Str $stat, AGA-Id $id) {
-        $.count-player-stats without %!player-stats;
+        $.count-player-stats if not %!player-stats.keys;
         %!player-stats{$stat}{$.normalize-id($id)};
     }
 
@@ -138,3 +157,5 @@ class Games::Go::AGA::Objects::Tournament
         });
     }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

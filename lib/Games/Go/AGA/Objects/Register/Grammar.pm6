@@ -55,3 +55,5 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
         token line-space { \h }                     # white-space without EOL (horizontal)
     token error     { (\S .*) {say "Error: not directive, comment, or player: $0"} }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

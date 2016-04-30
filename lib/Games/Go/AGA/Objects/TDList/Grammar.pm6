@@ -40,3 +40,5 @@ grammar Games::Go::AGA::Objects::TDList::Grammar {
     token club      { <alpha> <alpha> <alpha> <alpha> } # four letters
     token word      { <alpha> <alphanum>* } # alpha followed by alphanums (normal words)
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

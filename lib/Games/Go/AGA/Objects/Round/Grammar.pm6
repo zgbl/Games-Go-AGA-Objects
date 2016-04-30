@@ -40,3 +40,5 @@ grammar Games::Go::AGA::Objects::Round::Grammar {
     token alphanum { <[\w-]> }          # alphanumerics plus '_' and '-'
     token word     { <alpha> <alphanum>* }  # alpha followed by alphanums (normal words)
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

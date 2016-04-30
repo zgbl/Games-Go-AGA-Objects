@@ -18,3 +18,5 @@ role Games::Go::AGA::Objects::ID_Normalizer_Role {
         $/[0].uc ~ $/[1];
     }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

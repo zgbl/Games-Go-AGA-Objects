@@ -43,3 +43,5 @@ my package EXPORT::DEFAULT {
         not $_ or m/^ \h* '#' \N* $/
     }
 }
+
+# vim: expandtab shiftwidth=4 ft=perl6

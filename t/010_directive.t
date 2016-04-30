@@ -82,3 +82,5 @@ throws-like(
 is $dut.sprint, '## Test_2 New Value    #a comment', 'sprint is good';
 is $callback-called, 3, 'callback called';
 
+
+# vim: expandtab shiftwidth=4 ft=perl6

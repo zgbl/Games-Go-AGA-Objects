@@ -33,3 +33,5 @@ class Games::Go::AGA::Objects::TDList::Actions {
     }
 }
 
+
+# vim: expandtab shiftwidth=4 ft=perl6
