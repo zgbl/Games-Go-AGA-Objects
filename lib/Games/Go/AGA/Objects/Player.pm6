@@ -26,6 +26,7 @@ class Games::Go::AGA::Objects::Player
     has Num    $.sigma;                # for the calculating ratings
     has Str    $.flags           = ''; # other flags
     has        &.change-callback = sub { };
+    has Bool   $.change-flag     = False;   # set by changed()
 
     method id { # override accessor to normalize IDs
         $!normalized-id = $.normalize-id($!id) if $!normalized-id.not;
@@ -56,7 +57,8 @@ class Games::Go::AGA::Objects::Player
     #
     # methods
     #
-    method changed { &!change-callback(); self; }
+    method changed { &!change-callback(); $.set-changed-flag(); self; }
+    method set-changed-flag (Bool $new = True) { $!change-flag = $new; self; }
 
     multi method rank-to-rating ( Rating $rating ) { $rating } # already a Rating
     # rank is coarse-grained.  return middle of rating range.
@@ -89,6 +91,11 @@ class Games::Go::AGA::Objects::Player
     }
     method club { $.flag('Club') }      # required for TDList Club column
 
+    method full-name {
+        $!first-name
+          ?? "$!last-name, $!first-name"
+          !! $!last-name;
+    }
     method sprint {
         (
             $.id,

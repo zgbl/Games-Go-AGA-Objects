@@ -55,50 +55,73 @@ my $expect = (
     'TST22 Last Name 22, First Name 22 5D Club=FooB Xyz=ABC',
 ).join("\n");
 
-my $callback-called = 0;
+my $dut-callback-called = 0;
 my $game-callback-called = 0;
 my &old-callback = $dut.change-callback;
 $dut.set-change-callback(
-    method {
+    sub {
         &old-callback();
-        $callback-called++;
+        $dut-callback-called++;
     }
 );
 
-my $game = Games::Go::AGA::Objects::Game.new(
-    white-id => 'Tst1',
-    black-id => 'Tst22',
-    komi     => 0.5,
-    handicap => 2,
-    change-callback => method { $game-callback-called++ },
-);
-throws-like(
-    { $dut.round(1).add-game( $game ); },
-    X::AdHoc,
-);
-say 'Add player';
-$dut.add-player(Games::Go::AGA::Objects::Player.new(
-    id         => 'Tst033',
-    last-name  => 'Last Name33',
-    first-name => 'First Name33',
-    rank       => '3D',
-));
-
-say 'Add game';
 $dut.add-game(1,
     Games::Go::AGA::Objects::Game.new(
         white-id => 'TST1',
-        black-id => 'TST33',
+        black-id => 'TST22',
         komi     => 0.5,
         handicap => 2,
         change-callback => sub { $game-callback-called++ },
+    )
+);
+
+$dut.add-player(
+    Games::Go::AGA::Objects::Player.new(
+        id         => 'Tst003',
+        last-name  => 'Last Name 3',
+        first-name => 'First Name 3',
+        rank       => '3D',
+        flags      => 'Club=A333',
     ),
 );
 
-$expect ~= "\nTST33 Last Name33, First Name33 3D";
+$dut.add-player(
+    Games::Go::AGA::Objects::Player.new(
+        id         => 'TZZs04',
+        last-name  => 'Last Name 4',
+        first-name => 'First Name 4',
+        rank       => '4k',
+        flags      => 'Club=BB44',
+    ),
+);
+
+my $game = Games::Go::AGA::Objects::Game.new(
+    white-id => 'TZZS4',
+    black-id => 'TST3',
+    komi     => 7.5,
+    handicap => 0,
+    change-callback => sub { $game-callback-called++ },
+);
+
+$dut.round(1).add-game( $game );
+
+$expect = join("\n",
+    $expect,
+    'TST3 Last Name 3, First Name 3 3D Club=A333',
+    'TZZS4 Last Name 4, First Name 4 4k Club=BB44',
+);
 is $dut.sprint, $expect, 'sprint OK';
 
-is $callback-called, 10, 'callback-called';
+$dut.game(1, 0).set-result('w');
+is $dut.player-stats('wins', 'TST1'), 1, 'TST1 wins';
+is $dut.player-stats('wins', 'TST22'), 0, 'TST22 wins';
+$dut.game(1, 'TZZS4').set-result('w');
+is $dut.player-stats('wins', 'TZZS4'), 1, 'TZZS4 wins';
+is $dut.player-stats('wins', 'TST3'), 0, 'TST3 wins';
+is $dut.player-stats('defeated', 'TST3'), 0, 'TST3 defeated';
+is $dut.player-stats('defeated-by', 'TST3'), 'DF_by_TZZS4', 'TST3 defeated-by';
+
+is $dut-callback-called, 10, 'dut-callback-called';
 is $game-callback-called, 10, 'game-callback-called';
 
 

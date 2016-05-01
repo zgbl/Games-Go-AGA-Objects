@@ -24,14 +24,14 @@ is $dut.get-next-table-number, 2, 'table 2';
 my $callback-called;
 $dut = Games::Go::AGA::Objects::Round.new(
     round-number => 1,
-    change-callback => method { $callback-called++ },
+    change-callback => sub { $callback-called++ },
 );
 $dut.add-game(
     Games::Go::AGA::Objects::Game.new(
         white-id => 'Tst1',
         black-id => 'Tst22',
         komi  => 7.5,
-        change-callback => method { $dut.changed },
+        change-callback => sub { $dut.changed },
     ),
 );
 $dut.add-game(
@@ -40,15 +40,15 @@ $dut.add-game(
         black-id => 'Tst1022',
         komi  => 0.5,
         handi => 2,
-        change-callback => method { $dut.changed },
+        change-callback => sub { $dut.changed },
     ),
 );
 is $dut.sprint, "# Round 1\nTST1 TST22 ? 0 7.5\nTST101 TST1022 ? 0 0.5", 'sprint OK';
 
-$dut.get-game(0).set-result('w');
-$dut.get-game('Tst1022', 'Tst101').set-result('b');
-is $dut.get-game(0).winner, 'TST1',   'right winner in first game';
-is $dut.get-game('Tst1022').loser,  'TST101', 'right loser in second game';
+$dut.game(0).set-result('w');
+$dut.game('Tst1022', 'Tst101').set-result('b');
+is $dut.game(0).winner, 'TST1',   'right winner in first game';
+is $dut.game('Tst1022').loser,  'TST101', 'right loser in second game';
 is $callback-called, 4, 'callback called';
 is $dut.sprint, "# Round 1\nTST1 TST22 w 0 7.5\nTST101 TST1022 b 0 0.5", 'sprint OK';
 

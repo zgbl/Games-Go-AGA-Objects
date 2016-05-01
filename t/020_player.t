@@ -42,7 +42,7 @@ $dut = Games::Go::AGA::Objects::Player.new(
 is $dut.rank, '5D', 'correct rank' ;
 
 my $callback-called;
-$dut.set-change-callback( method { $callback-called++ } );
+$dut.set-change-callback( sub { $callback-called++ } );
 $dut.set-rating(-4.8);
 is $dut.rating, -4.8, 'correct rating';
 $dut.set-rank('4d');

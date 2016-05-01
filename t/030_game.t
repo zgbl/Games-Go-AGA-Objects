@@ -19,7 +19,7 @@ my $dut = Games::Go::AGA::Objects::Game.new(
     black-id => 'Tst22',
     komi     => 0.5,
     handicap => 2,
-    change-callback => method { $callback-called++ },
+    change-callback => sub { $callback-called++ },
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Game');
 

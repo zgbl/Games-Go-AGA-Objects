@@ -39,8 +39,8 @@ class Games::Go::AGA::Objects::Round
         self;
     }
 
-    multi method get-game (Int $idx) { @!games[$idx] }
-    multi method get-game (AGA-Id $id0, AGA-Id $id1 = $id0) {
+    multi method game (Int $idx) { @!games[$idx] }
+    multi method game (AGA-Id $id0, AGA-Id $id1 = $id0) {
         given $.idx-of-game($id0, $id1) {
             when .defined { @!games[$_] }
         }

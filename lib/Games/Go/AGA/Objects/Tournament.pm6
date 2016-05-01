@@ -22,14 +22,16 @@ class Games::Go::AGA::Objects::Tournament
     has                                %!player-stats;
     has Bool                           $.suppress-changes = False;
     has Bool                           $!change-pending = False;
+    has Bool                           $!adj-ratings-stale = False; # when a Round changes
 
     submethod BUILD (:@rounds, :$suppress-changes, :$change-pending) {
-        @rounds.map( { self!add-round($_) } );
+        @rounds.map( { self!set-round(*) } );
         %!player-stats = [];
     };
 
-    method set-suppress-changes (Bool $val) { $!suppress-changes = $val; self; }
-    method set-change-pending (Bool $val)   { $!change-pending = $val; self; }
+    method set-suppress-changes (Bool $val = True)  { $!suppress-changes = $val; self; }
+    method set-change-pending (Bool $val = True)    { $!change-pending = $val; self; }
+    method set-adj-ratings-stale (Bool $val = True) { $!adj-ratings-stale = $val; self; }
     method changed {
         if not $!suppress-changes {
             $!change-pending = True;
@@ -38,53 +40,61 @@ class Games::Go::AGA::Objects::Tournament
         self;
     }
 
-    method  add-round (Games::Go::AGA::Objects::Round $round) { self!add-round($round) }
-    method !add-round (Games::Go::AGA::Objects::Round $round) {
-        $.replace-round($round, $.rounds + 1 || 1);
-        self;
-    }
-    method replace-round (Games::Go::AGA::Objects::Round $round, Int $idx) {
-        @!rounds[$idx] = $round;
+    method !set-round (Games::Go::AGA::Objects::Round $round,
+                       Non-Neg-Int $round-number = @!rounds.elems) {
+        @!rounds[$round-number] = $round;
         my $self = self;
         my &prev-callback = $round.change-callback;
         $round.set-change-callback(
             sub {
-                $self.clear-player-stats;   # force re-count
+                %!player-stats = [];        # force re-count
+                $!adj-ratings-stale = True; # probably
                 &prev-callback();
             }
         );
+    }
+    method add-round (Games::Go::AGA::Objects::Round $round) {
+        self!set-round($round);
         self;
     }
-    method delete-round (Games::Go::AGA::Objects::Round $round, Int $idx) {
-        @!rounds.splice($idx, 1);
+    method replace-round (Games::Go::AGA::Objects::Round $round, Pos-Int $round-number) {
+        self!set-round($round, $round-number - 1);
         self;
     }
-    method rounds { @!rounds.elems - 1 } # don't include [0]
-    method round (Pos-Int $idx) { @!rounds[$idx] }
+    method delete-round (Games::Go::AGA::Objects::Round $round, Pos-Int $round-number) {
+        @!rounds.splice($round-number - 1, 1);
+        self;
+    }
+    method rounds { @!rounds.elems }
+    method round (Pos-Int $round-number) { @!rounds[$round-number - 1] }
     ######################################
     #
     #   other methods
     #
     # list of all games in the tournament
-    method games { @!rounds.grep({ .so }).map({ |.games }); }
-    multi method game (Int $round-num, Int $idx) {
-        @!rounds.[$round-num].game($idx)
+    method games {
+        @!rounds.map( |*.games ); # flatten into one big list
     }
-    multi method game (Int $round-num, AGA-Id $id0, AGA-Id $id1?) {
-        @!rounds.[$round-num].game($id0, $id1)
+    multi method game (Pos-Int $round-number, Int $idx) {
+        @!rounds.[$round-number - 1].game($idx)
     }
-    method add-game (Int $round-num, Games::Go::AGA::Objects::Game $game) {
-        without @!rounds[$round-num] {
+    multi method game (Pos-Int $round-number, AGA-Id $id0, AGA-Id $id1?) {
+        @!rounds.[$round-number - 1].game($id0, $id1)
+    }
+    method add-game (Pos-Int $round-number, Games::Go::AGA::Objects::Game $game) {
+        without @!rounds[$round-number - 1] {
             $.add-round(
                 Games::Go::AGA::Objects::Round.new(
-                    round-number => $round-num,
+                    round-number => $round-number,
                 ),
             );
         }
-        @!rounds[$round-num].add-game($game);
+        @!rounds[$round-number - 1].add-game($game);
     }
     method count-player-stats {
-        for $.games -> $game {
+say "\n", $.games().perl, "\n";
+        for $.games() -> $game {
+say "\n", $game.perl, "\n";
             my $white = $game.white;
             my $black = $game.black;
             my $wid = $white.id;
@@ -96,19 +106,24 @@ class Games::Go::AGA::Objects::Tournament
                 push %!player-stats{$bid}<no_result>, $white;
                 next;
             }
-            my $win_id = $game.winner.id;
-            my $los_id = $game.loser.id;
-            push %!player-stats{$win_id}<wins>, $game;
-            push %!player-stats{$win_id}<defeated>, $game.loser;
-            push %!player-stats{$los_id}<losses>, $game;
-            push %!player-stats{$los_id}<defeated_by>, $game.winner;
+            my $win-id = $game.winner.id;
+            my $los-id = $game.loser.id;
+            push %!player-stats{$win-id}<wins>, $game;
+            push %!player-stats{$win-id}<defeated>, $game.loser;
+            push %!player-stats{$los-id}<losses>, $game;
+            push %!player-stats{$los-id}<defeated_by>, $game.winner;
         }
         self;
     }
-    method clear-player-stats { %!player-stats = [] }
     method player-stats (Str $stat, AGA-Id $id) {
         $.count-player-stats if not %!player-stats.keys;
-        %!player-stats{$stat}{$.normalize-id($id)};
+        given %!player-stats{$stat}{$id} {
+            $_ if .defined;
+            die "No player-stat called $stat (expect: games, "
+                ~ 'no_result, wins, losses, defeated or '
+                ~ 'defeated_by)' without %!player-stats{$stat};
+            die "No player-stat for ID $id";
+        }
     }
 
     method send-to-aga {
@@ -139,7 +154,7 @@ class Games::Go::AGA::Objects::Tournament
                 .id,
                 $name-width,
                 $name-width,
-                .full_name,
+                .full-name,
                 .rating,
             );
         });

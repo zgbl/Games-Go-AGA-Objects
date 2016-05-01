@@ -26,7 +26,7 @@ my package EXPORT::DEFAULT {
         ($_ >= 1 and $_ < 10) or ($_ <= -1 and $_ > -100) or ($_ == 0.0)
          #  or die 'Invalid Rating (expect -99.99 to -1 or 1 to 9.99)'
     };
-    subset Rating-or-Rank where Rating or Rank;
+    subset Rank-or-Rating where Rank or Rating;
     subset Non-Neg-Int of Int where {
         (* >= 0)
          #  or die 'expect Int greater than or equal to 0'
