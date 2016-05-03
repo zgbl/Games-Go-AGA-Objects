@@ -1,31 +1,33 @@
 
 my class a {
     has @.b;
-    method get { @!b.map(|*.get); }
+    method get-flat { @!b.map(|*.get-flat); }
     method p {
-        say 'A: ', $.get.perl;
-        # why doesn't this loop act like C: below?
-        for $.get() -> $c {
+        say 'A: ', $.get-flat.perl;
+        # why doesn't this loop act like D: below?
+        for @.get-flat() -> $c {
             say 'B: ', $c.perl
         }
     }
 }
 my class b {
     has @.c;
-    method get { @!c };
+    method get-flat { @!c };
 }
 
 my $a = a.new(
-    b => (
-        b.new( c => (1, 2, 3) ),
-        b.new( c => (5, 6, 7) ),
+    :b(
+        b.new( :c(1, 2) ),
+        b.new( :c(5, 6) ),
     )
 );
 
 $a.p();
+say '';
 
-for $a.get() -> $c {
-    say 'C: ', $c.perl
+say 'C: ', $a.get-flat.perl;
+for $a.get-flat() -> $c {
+    say 'D: ', $c.perl
 }
 
 

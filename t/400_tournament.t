@@ -7,7 +7,7 @@
 ################################################################################
 use v6;
 use Test;
-plan 5;
+plan 10;
 
 use Games::Go::AGA::Objects::Directive;
 use Games::Go::AGA::Objects::Player;
@@ -16,8 +16,8 @@ use Games::Go::AGA::Objects::Round;
 use Games::Go::AGA::Objects::Tournament;          # the module under test
 
 my $dut = Games::Go::AGA::Objects::Tournament.new(
-    comments => [ <comment> ],
-    directives => (
+    :comments(['comment']),
+    :directives( [
         Games::Go::AGA::Objects::Directive.new(
             key => 'Tourney',
             value => 'Test Tournament 1',
@@ -28,8 +28,8 @@ my $dut = Games::Go::AGA::Objects::Tournament.new(
             value => '2016/04/28',
             comment => '# date comment',
         ),
-    ),
-    players => (
+    ] ),
+    :players( [
         Games::Go::AGA::Objects::Player.new(
             id         => 'TST022',
             last-name  => 'Last Name 22',
@@ -44,7 +44,7 @@ my $dut = Games::Go::AGA::Objects::Tournament.new(
             rank       => '4D',
             flags      => 'Club=ABCD',
         ),
-    ),
+    ] ),
 );
 
 my $expect = (
@@ -60,12 +60,12 @@ my $game-callback-called = 0;
 my &old-callback = $dut.change-callback;
 $dut.set-change-callback(
     sub {
-        &old-callback();
         $dut-callback-called++;
+        &old-callback();
     }
 );
 
-$dut.add-game(1,
+$dut.round(1).add-game( # 2 dut CHANGE (add round, add game)
     Games::Go::AGA::Objects::Game.new(
         white-id => 'TST1',
         black-id => 'TST22',
@@ -74,8 +74,9 @@ $dut.add-game(1,
         change-callback => sub { $game-callback-called++ },
     )
 );
+is $dut-callback-called, 2, 'dut-callback-called';
 
-$dut.add-player(
+$dut.add-player(    # dut CHANGE
     Games::Go::AGA::Objects::Player.new(
         id         => 'Tst003',
         last-name  => 'Last Name 3',
@@ -85,7 +86,7 @@ $dut.add-player(
     ),
 );
 
-$dut.add-player(
+$dut.add-player(    # dut CHANGE
     Games::Go::AGA::Objects::Player.new(
         id         => 'TZZs04',
         last-name  => 'Last Name 4',
@@ -103,7 +104,7 @@ my $game = Games::Go::AGA::Objects::Game.new(
     change-callback => sub { $game-callback-called++ },
 );
 
-$dut.round(1).add-game( $game );
+$dut.round(1).add-game( $game );    # dut CHANGE, round CHANGE
 
 $expect = join("\n",
     $expect,
@@ -112,17 +113,17 @@ $expect = join("\n",
 );
 is $dut.sprint, $expect, 'sprint OK';
 
-$dut.game(1, 0).set-result('w');
-is $dut.player-stats('wins', 'TST1'), 1, 'TST1 wins';
-is $dut.player-stats('wins', 'TST22'), 0, 'TST22 wins';
-$dut.game(1, 'TZZS4').set-result('w');
-is $dut.player-stats('wins', 'TZZS4'), 1, 'TZZS4 wins';
-is $dut.player-stats('wins', 'TST3'), 0, 'TST3 wins';
-is $dut.player-stats('defeated', 'TST3'), 0, 'TST3 defeated';
-is $dut.player-stats('defeated-by', 'TST3'), 'DF_by_TZZS4', 'TST3 defeated-by';
+$dut.game(1, 0).set-result('w');    # game CHANGE, round CHANGE, dut CHANGE
+is $dut.player-stats('defeated', 'TST1'), <TST22>, 'TST1 wins';
+is $dut.player-stats('defeated', 'TST22'), [], 'TST22 wins';
+is $dut.player-stats('defeated_by', 'TST1'), [], 'TST1 wins';
+is $dut.player-stats('defeated_by', 'TST22'), <TST1>, 'TST22 wins';
+$dut.game(1, 'TZZS4').set-result('w');  # game CHANGE, round CHANGE, dut CHANGE
+is $dut.player-stats('defeated', 'TZZS4'), ['TST3'], 'TZZS4 wins';
+is $dut.player-stats('defeated', 'TST3'), [], 'TST3 wins';
 
-is $dut-callback-called, 10, 'dut-callback-called';
-is $game-callback-called, 10, 'game-callback-called';
+is $dut-callback-called, 7, 'dut-callback-called';
+is $game-callback-called, 2, 'game-callback-called';
 
 
 # vim: expandtab shiftwidth=4 ft=perl6

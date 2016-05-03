@@ -44,7 +44,6 @@ for 0 .. @tdlist.end -> $idx {
     $sth.execute($match.[0]);               # ID, the primary key
     my $row = $sth.fetchall_arrayref[0];    # always just one row
     is $row, $match, "row $idx OK";
-#say $row.perl, "\n", $match.perl, ;
 }
 
 

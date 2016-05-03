@@ -8,7 +8,7 @@
 use v6;
 
 use Test;
-plan 8;
+plan 10;
 
 # use-ok('Games::Go::AGA::Objects::Round');          # the module under test
 use Games::Go::AGA::Objects::Round;     # the module under test
@@ -31,7 +31,6 @@ $dut.add-game(
         white-id => 'Tst1',
         black-id => 'Tst22',
         komi  => 7.5,
-        change-callback => sub { $dut.changed },
     ),
 );
 $dut.add-game(
@@ -40,7 +39,6 @@ $dut.add-game(
         black-id => 'Tst1022',
         komi  => 0.5,
         handi => 2,
-        change-callback => sub { $dut.changed },
     ),
 );
 is $dut.sprint, "# Round 1\nTST1 TST22 ? 0 7.5\nTST101 TST1022 ? 0 0.5", 'sprint OK';
@@ -52,5 +50,14 @@ is $dut.game('Tst1022').loser,  'TST101', 'right loser in second game';
 is $callback-called, 4, 'callback called';
 is $dut.sprint, "# Round 1\nTST1 TST22 w 0 7.5\nTST101 TST1022 b 0 0.5", 'sprint OK';
 
+my $game0 = $dut.game(0);
+my $game1 = $dut.game('TST1022');
+
+$dut = Games::Go::AGA::Objects::Round.new(
+    :round-number(1),
+    :games( $game1, $game0 ),
+);
+is $callback-called, 4, 'callback called';
+is $dut.game(0).white-id, 'TST101', 'pre-built games';
 
 # vim: expandtab shiftwidth=4 ft=perl6

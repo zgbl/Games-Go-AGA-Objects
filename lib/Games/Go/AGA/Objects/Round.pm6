@@ -34,6 +34,14 @@ class Games::Go::AGA::Objects::Round
     method changed { &!change-callback(); self; }
 
     method add-game (Games::Go::AGA::Objects::Game $game) {
+        my &prev-callback = $game.change-callback;
+        my $round = self;
+        $game.set-change-callback(
+            sub {
+                &prev-callback();   # call game's previous callback
+                $round.changed;     # call our own changed callback
+            }
+        );
         @!games.push($game);
         $.changed;
         self;

@@ -23,11 +23,11 @@ class Games::Go::AGA::Objects::Register {
     has Str                                @!comments;     # array of strings
     has                                    &.change-callback;
 
-    submethod BUILD (:&change-callback = sub {},
+    submethod BUILD (:&change-callback,
                      :@comments,
                      :@directives,
                      :@players) {
-        &!change-callback = &change-callback;       # first!
+        &!change-callback = &change-callback // sub {};       # first!
         @comments.map( { self!_add-comment($_) } );
         @directives.map( { self!_set-directive($_) } );
         @players.map( { self!_add-player($_) } );
@@ -166,11 +166,7 @@ class Games::Go::AGA::Objects::Register {
     }
 
     multi method delete-comment (Regex $re) {
-        my @new_comments;
-        @!comments.map({
-            push @new_comments, $_ if not $_.match($re);
-        });
-        @!comments = @new_comments;
+        @!comments = @!comments.grep({ not $_.match($re) });
         $.changed;
         self;
     }
