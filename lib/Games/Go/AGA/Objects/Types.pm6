@@ -26,7 +26,7 @@ my package EXPORT::DEFAULT {
         ($_ >= 1 and $_ < 10) or ($_ <= -1 and $_ > -100) or ($_ == 0.0)
          #  or die 'Invalid Rating (expect -99.99 to -1 or 1 to 9.99)'
     };
-    subset Rank-or-Rating where Rank or Rating;
+    subset Rank-or-Rating where * ~~ Rank | Rating;
     subset Non-Neg-Int of Int where {
         (* >= 0)
          #  or die 'expect Int greater than or equal to 0'
@@ -39,8 +39,11 @@ my package EXPORT::DEFAULT {
         m/^<[wb?]>$/
          #  or die q[expect 'w', 'b', or '?' for Result]
     };
+    subset Directive-Val of Str where {
+        .match(/i<[#\n]>/).not && .trim eq *
+    }
     subset Comment of Str where {
-        not $_ or m/^ \h* '#' \N* $/
+        * eq '' or m/^ \h* '#' \N* $/
     }
 }
 

@@ -12,11 +12,11 @@ use v6;
 class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
-    has Str-no-Space $.key is required; # directive name
-    has Str          $.value = '';      # the value string, if any
-    has Str          $.comment = '';    # optional comment
-    has              &.change-callback = sub { };
-
+    has Str-no-Space  $.key is required; # directive name
+    has Directive-Val $.value = '';      # the value string, if any
+    has Comment       $.comment = '';    # optional comment
+    has               &.change-callback = sub { };
+ 
     my %booleans = (    #= class variable: which keys are boolean
         Test => 1,
         Aga_rated => 1
@@ -37,7 +37,7 @@ class Games::Go::AGA::Objects::Directive {
     #
     method booleans { %booleans.keys.sort; }
     method add-boolean (Str $key) {
-        %booleans{$key.tclc} = 1;
+        %booleans{$key.tclc} = True;
         self;
     }
     method delete-boolean (Str $key) {
@@ -53,7 +53,7 @@ class Games::Go::AGA::Objects::Directive {
     #
     method lists { %lists.keys.sort; }
     method add-list (Str $key) {
-        %lists{$key.tclc} = 1;
+        %lists{$key.tclc} = True;
         self;
     }
     method delete-list (Str $key) {
@@ -67,12 +67,9 @@ class Games::Go::AGA::Objects::Directive {
     #
     # set/get the directive value
     #
-    method set-value (Str $value) {
+    method set-value (Directive-Val $value) {
         $!value = $value;
         $.changed;
-    }
-    method value {
-        $!value.subst(/\n.*/, '').trim;
     }
 
     ######################################
@@ -82,14 +79,6 @@ class Games::Go::AGA::Objects::Directive {
     method set-comment (Str $comment) {
         $!comment = $comment // '';
         $.changed;
-    }
-    method comment {
-        given $!comment.subst(/\h*\n.*/, '') {
-            when Nil            { '' };
-            when ''             { $_ };
-            when m/ ^ \h* '#' / { $_ };
-            default             { "# $_" };
-        }
     }
 
     ######################################
