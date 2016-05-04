@@ -40,10 +40,10 @@ my package EXPORT::DEFAULT {
          #  or die q[expect 'w', 'b', or '?' for Result]
     };
     subset Directive-Val of Str where {
-        .match(/i<[#\n]>/).not && .trim eq *
+        .match(/i<[#\n]>/).not
     }
     subset Comment of Str where {
-        * eq '' or m/^ \h* '#' \N* $/
+        $_ eq '' || $_.match(/^ \h* '#' \N* $/)
     }
 }
 

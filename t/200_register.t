@@ -86,7 +86,7 @@ $expect = (
     '# comment 5',
     '## AAA Abc',
     '## AccCcc Ccc ccc ccC',
-    '## bbbb new bbb #  BBBB comment',
+    '## bbbb new bbb     #  BBBB comment',
 ).join("\n");
 is $dut.sprint, $expect, 'sprint OK';
 

@@ -14,7 +14,7 @@ class Games::Go::AGA::Objects::Directive {
 
     has Str-no-Space  $.key is required; # directive name
     has Directive-Val $.value = '';      # the value string, if any
-    has Comment       $.comment = '';    # optional comment
+    has Str           $.comment = '';    # optional comment
     has               &.change-callback = sub { };
  
     my %booleans = (    #= class variable: which keys are boolean
@@ -79,6 +79,14 @@ class Games::Go::AGA::Objects::Directive {
     method set-comment (Str $comment) {
         $!comment = $comment // '';
         $.changed;
+    }
+    method comment {
+        $!comment.subst-mutate(/\n .*/, '');    # truncate at first newline
+        if     not $!comment eq ''
+           and not $!comment.match(/^ \h* '#'/) {
+            $!comment = "# $!comment";
+        }
+        $!comment;
     }
 
     ######################################
