@@ -28,12 +28,11 @@ class Games::Go::AGA::Objects::Register::Actions {
         );
     }
     method directive ($/) {
-        my $directive = Games::Go::AGA::Objects::Directive.new(
+        make Games::Go::AGA::Objects::Directive.new(
             key => ~$<key>,
-            value => $<value>.defined ?? ~$<value> !! '',
-            comment => $<directive-comment>.defined ?? $<directive-comment>.trim !! '',
+            value => ($<value> // '').trim,
+            comment => ($<directive-comment> // '').trim,
         );
-        make $directive;
     }
 
     method line-comment ($/) {
@@ -41,16 +40,16 @@ class Games::Go::AGA::Objects::Register::Actions {
     }
 
     method player ($/) {
-        my $player = Games::Go::AGA::Objects::Player.new(
-            id         => ~$<id>,
-            last-name  => ~$<last-name>,
-            first-name => $<first-name> ?? ~$<first-name> !! '',
-            flags      => $<flags> ?? ~$<flags> !! '',
-            comment    => $<player-comment> ?? $<player-comment>.trim !! '',
+        make Games::Go::AGA::Objects::Player.new(
+            id             => ~$<id>,
+            last-name      => ~$<last-name>,
+            first-name     => ($<first-name> // '').trim,
+            rank-or-rating => ~$<rank-or-rating> ~~ Rank  # string in Rank form?
+                ?? ~$<rank-or-rating>          # use Rank form
+                !! +$<rank-or-rating>,         # numeric Rating form
+            flags          => ($<flags> // '').trim,
+            comment        => ($<player-comment> // '').trim,
         );
-        $player.set-rank(~$<rank>) if $<rank>;
-        $player.set-rating(+~$<rating>) if $<rating>;
-        make $player;
     }
 }
 

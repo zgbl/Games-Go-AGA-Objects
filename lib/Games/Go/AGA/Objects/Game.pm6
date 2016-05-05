@@ -17,7 +17,7 @@ class Games::Go::AGA::Objects::Game
     has AGA-Id      $.black-id is required; # ID of black player
     has AGA-Id      $.normalized-white-id;
     has AGA-Id      $.normalized-black-id;
-    has Non-Neg-Int $.table-number;
+    has Non-Neg-Int $.table-number = 0;
     has Non-Neg-Int $.handicap = 0;
     has Rat         $.komi = 7.5;
     has Result      $.result = '?';         # 'w', 'b', or '?'
@@ -31,7 +31,7 @@ class Games::Go::AGA::Objects::Game
     # accessors
     #
     method white-id { # override accessor to normalize IDs
-        $!normalized-white-id = $.normalize-id($!white-id) without $!normalized-white-id;
+        $!normalized-white-id //= $.normalize-id($!white-id);
         $!normalized-white-id;
     }
     method un-normalized-white-id { # in case you want your original ID back
@@ -53,7 +53,7 @@ class Games::Go::AGA::Objects::Game
     method set-white-adj-rating (Rating $w) { $!white-adj-rating = $w; $.changed; };
     method set-black-adj-rating (Rating $b) { $!black-adj-rating = $b; $.changed; };
     method set-change-callback (&ccb)       { &!change-callback  = &ccb; self; };
-    method set-comment($c)                  { $!comment          = $c; $.changes; };
+    method set-comment(Str $c)              { $!comment          = $c; $.changes; };
 
     ######################################
     #
@@ -76,26 +76,28 @@ class Games::Go::AGA::Objects::Game
     }
 
     method sprint {
-        my $sprint = (
+        my @comment;
+        @comment.push($!comment) if $!comment.chars;
+        if $!table-number {
+            @comment.push("Tbl $!table-number");
+        }
+        with $!white-adj-rating or $!black-adj-rating {
+            @comment.push("adjusted ratings:",
+                ($!white-adj-rating || '?') ~ ',',
+                $!black-adj-rating || '?',
+            );
+        }
+        if @comment.elems > 0 and
+           not @comment[0] ~~ m/^ \h* '#'/ {
+            @comment.unshift('#');
+        }
+        (
             $.white-id,
             $.black-id,
             $!result,
             $!handicap,
             $!komi,
-        ).grep(*.defined).join(' ');
-        with $!table-number or $!white-adj-rating or $!black-adj-rating {
-            $sprint ~= ' #';
-            with $!table-number {
-                $sprint ~= " Tbl $!table-number";
-            }
-            with $!white-adj-rating or $!black-adj-rating {
-                $sprint ~= " adjusted ratings: " ~ (
-                    $!white-adj-rating || '?',
-                    $!black-adj-rating || '?',
-                ).join(', ');
-            }
-        }
-        $sprint;
+            |@comment).join(' ');
     }
 }
 

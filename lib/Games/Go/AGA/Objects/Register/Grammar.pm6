@@ -38,21 +38,22 @@ grammar Games::Go::AGA::Objects::Register::Grammar {
     token player         {  <id>
                            <line-space>+ <last-name=.name>
                           [<line-space>* \, <line-space>* <first-name=.name> ]?
-                           <line-space>+ [ <rank>|<rating> ] 
+                           <line-space>+ [ <rank-or-rating> ] 
                           [<line-space>+ <flags> ]?
                           [<line-space>* <player-comment=.comment> ]?
                          }
-        token id         { <alpha>* \d+ }
-        token name       { [ <line-space>* <alpha> \w* ]* }   # alpha followed by alphanums
-        token rank       { \d+ <[dkDK]> }           # like 4k, 6D
-        token rating     { '-'? \d+ \.? \d* }       # signed, decimal number
-        token flags      { <flag>+ }
-        token flag       { <line-space>* <word> [ '=' <alphanum>+ ]? }
-        token comment    { '#' \N* }                # from hash to end of line
-        token alpha      { <[\w] - [\d]> }          # alphas without numeric
-        token alphanum   { <[\w-]> }                # alphanumerics plus '_' and '-'
-        token word       { <alpha> <alphanum>* }    # alpha followed by alphanums (normal words)
-        token line-space { \h }                     # white-space without EOL (horizontal)
+        token id             { <alpha>* \d+ }
+        token name           { [ <line-space>* <alpha> \w* ]* }   # alpha followed by alphanums
+        token rank-or-rating { <rank> | <rating> }
+        token rank           { \d+ <[dkDK]> }           # like 4k, 6D
+        token rating         { '-'? \d+ \.? \d* }       # signed, decimal number
+        token flags          { <flag>+ }
+        token flag           { <line-space>* <word> [ '=' <alphanum>+ ]? }
+        token comment        { '#' \N* }                # from hash to end of line
+        token alpha          { <[\w] - [\d]> }          # alphas without numeric
+        token alphanum       { <[\w-]> }                # alphanumerics plus '_' and '-'
+        token word           { <alpha> <alphanum>* }    # alpha followed by alphanums (normal words)
+        token line-space     { \h }                     # white-space without EOL (horizontal)
     token error     { (\S .*) {say "Error: not directive, comment, or player: $0"} }
 }
 

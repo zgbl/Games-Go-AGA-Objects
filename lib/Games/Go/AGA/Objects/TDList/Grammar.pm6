@@ -25,20 +25,22 @@ grammar Games::Go::AGA::Objects::TDList::Grammar {
                         [ \h* ',' \h* <first-name=.name> ]?
                           \h+ <id>
                         [ \h+ <membership-type=.word> ]?
-                          \h+ <rating>
+                          \h+ <rank-or-rating>
                         [ \h+ <membership-date=.date> ]?
                         [ \h+ <club> ]?
                         [ \h+ <state> ]?
                     }
-    token name      { <word> [\h+ <word>]* }
-    token id        { \d+ }
-    token rating    { '-'? \d+ [ \. \d+ ]? }
-    token date      { \d\d? <[-/]> \d\d? <[-/]> \d\d\d?\d? }
-#   token alpha     { <[\w] - [\d]> }       # alphas without numeric
-    token alphanum  { <[\w.-]> }            # alphanumerics plus '_' and a few extra chars
-    token state     { <alpha> <alpha> }     # two letters
-    token club      { <alpha> <alpha> <alpha> <alpha> } # four letters
-    token word      { <alpha> <alphanum>* } # alpha followed by alphanums (normal words)
+    token name           { <word> [\h+ <word>]* }
+    token id             { \d+ }
+    token rank-or-rating { <rank> | <rating> }
+    token rank           { \d+ <[dkDK]> }           # like 4k, 6D
+    token rating         { '-'? \d+ [ \. \d+ ]? }
+    token date           { \d\d? <[-/]> \d\d? <[-/]> \d\d\d?\d? }
+#   token alpha          { <[\w] - [\d]> }       # alphas without numeric
+    token alphanum       { <[\w.-]> }            # alphanumerics plus '_' and a few extra chars
+    token state          { <alpha> <alpha> }     # two letters
+    token club           { <alpha> <alpha> <alpha> <alpha> } # four letters
+    token word           { <alpha> <alphanum>* } # alpha followed by alphanums (normal words)
 }
 
 # vim: expandtab shiftwidth=4 ft=perl6

@@ -23,8 +23,8 @@ my package EXPORT::DEFAULT {
          #  or die 'Invalid Rank (expect like 4D or 3k)'
     };
     subset Rating of Rat where {
-        ($_ >= 1 and $_ < 10) or ($_ <= -1 and $_ > -100) or ($_ == 0.0)
-         #  or die 'Invalid Rating (expect -99.99 to -1 or 1 to 9.99)'
+        ($_ >= 1) or ($_ <= -1) or ($_ == 0.0)
+         #  or die 'Invalid Rating'
     };
     subset Rank-or-Rating where * ~~ Rank | Rating;
     subset Non-Neg-Int of Int where {

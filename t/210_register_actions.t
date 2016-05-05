@@ -23,7 +23,7 @@ my Pair @texts = (
     => qq[#\n# comment\n## AGA\n## AGB\n## AGc with value\n## agd value # and comment],
  
        qq[Tmp001 Augustin, Reid  5d   Club=PALO BYE Drop3   #   what a poser!  ]
-    => qq[TMP1 Augustin, Reid 5D Club=PALO BYE Drop3 #   what a poser!],
+    => qq[TMP1 Augustin, Reid 5d Club=PALO BYE Drop3 #   what a poser!],
  
     qq:to/END/
         ## Tourney  Test  Tournament
@@ -44,8 +44,8 @@ my Pair @texts = (
         ## Date 2016/04/05
         ## Rounds 3
         ## Tourney Test  Tournament
-        TMP1 Augustin, Reid 5D Club=PALO BYE Drop3
-        TMP11 Augustin, Abc 4K # with a comment
+        TMP1 Augustin, Reid 5d Club=PALO BYE Drop3
+        TMP11 Augustin, Abc 4k # with a comment
         USA11 Abc, Abc 4.4 DROP2 # 4 dan
         END
 );

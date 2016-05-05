@@ -31,18 +31,18 @@ my $dut = Games::Go::AGA::Objects::Tournament.new(
     ] ),
     :players( [
         Games::Go::AGA::Objects::Player.new(
-            id         => 'TST022',
-            last-name  => 'Last Name 22',
-            first-name => 'First Name 22',
-            rank       => '5D',
-            flags      => 'Club=FooB Xyz=ABC',
+            id             => 'TST022',
+            last-name      => 'Last Name 22',
+            first-name     => 'First Name 22',
+            rank-or-rating => '5D',
+            flags          => 'Club=FooB Xyz=ABC',
         ),
         Games::Go::AGA::Objects::Player.new(
-            id         => 'Tst001',
-            last-name  => 'Last Name 1',
-            first-name => 'First Name 1',
-            rank       => '4D',
-            flags      => 'Club=ABCD',
+            id             => 'Tst001',
+            last-name      => 'Last Name 1',
+            first-name     => 'First Name 1',
+            rank-or-rating => '4D',
+            flags          => 'Club=ABCD',
         ),
     ] ),
 );
@@ -78,21 +78,21 @@ is $dut-callback-called, 2, 'dut-callback-called';
 
 $dut.add-player(    # dut CHANGE
     Games::Go::AGA::Objects::Player.new(
-        id         => 'Tst003',
-        last-name  => 'Last Name 3',
-        first-name => 'First Name 3',
-        rank       => '3D',
-        flags      => 'Club=A333',
+        id             => 'Tst003',
+        last-name      => 'Last Name 3',
+        first-name     => 'First Name 3',
+        rank-or-rating => '3D',
+        flags          => 'Club=A333',
     ),
 );
 
 $dut.add-player(    # dut CHANGE
     Games::Go::AGA::Objects::Player.new(
-        id         => 'TZZs04',
-        last-name  => 'Last Name 4',
-        first-name => 'First Name 4',
-        rank       => '4k',
-        flags      => 'Club=BB44',
+        id             => 'TZZs04',
+        last-name      => 'Last Name 4',
+        first-name     => 'First Name 4',
+        rank-or-rating => '4k',
+        flags          => 'Club=BB44',
     ),
 );
 

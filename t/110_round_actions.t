@@ -22,10 +22,10 @@ my Pair @texts = (
     =>
     qq:to/END/
         # Round 0
-        USA94531 USA94557 w 0 0.5
-        USA4522 USA94558 b 0 -7.5
-        USA4533 USA94549 w 0 -7.5
-        USA94554 USA94571 b 0 -7.5
+        USA94531 USA94557 w 0 0.5 #      Yao, Kevin (  4.500->  5.113) vs (  3.500->  3.732) Cho, Al
+        USA4522 USA94558 b 0 -7.5 # Smith, Steve A. (  4.500->  3.816) vs (  3.500->  3.344) Tang, Gilbert
+        USA4533 USA94549 w 0 -7.5 #    Chou, Andrew (  4.500->  4.559) vs (  3.500->  2.740) Yang, Dan
+        USA94554 USA94571 b 0 -7.5 #       Liu, Dong (  2.500->  1.610) vs (  1.500->  1.253) Li, Sheryl
         END
 );
 
