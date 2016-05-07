@@ -7,7 +7,7 @@
 ################################################################################
 use v6;
 use Test;
-plan 10;
+plan 11;
 
 use Games::Go::AGA::Objects::Directive;
 use Games::Go::AGA::Objects::Player;
@@ -51,8 +51,8 @@ my $expect = (
     '# comment',
     '## DATE 2016/04/28 # date comment',
     '## Tourney Test Tournament 1 # tourney comment',
-    'TST1 Last Name 1, First Name 1 4D Club=ABCD',
     'TST22 Last Name 22, First Name 22 5D Club=FooB Xyz=ABC',
+    'TST1 Last Name 1, First Name 1 4D Club=ABCD',
 ).join("\n");
 
 my $dut-callback-called = 0;
@@ -124,6 +124,8 @@ is $dut.player-stats('defeated', 'TST3'), [], 'TST3 wins';
 
 is $dut-callback-called, 7, 'dut-callback-called';
 is $game-callback-called, 2, 'game-callback-called';
+
+ok False, "TODO test send-to-AGA";
 
 
 # vim: expandtab shiftwidth=4 ft=perl6

@@ -78,26 +78,31 @@ class Games::Go::AGA::Objects::Game
     method sprint {
         my @comment;
         @comment.push($!comment) if $!comment.chars;
+
         if $!table-number {
             @comment.push("Tbl $!table-number");
         }
+
         with $!white-adj-rating or $!black-adj-rating {
             @comment.push("adjusted ratings:",
                 ($!white-adj-rating || '?') ~ ',',
                 $!black-adj-rating || '?',
             );
         }
+
         if @comment.elems > 0 and
            not @comment[0] ~~ m/^ \h* '#'/ {
             @comment.unshift('#');
         }
+
         (
             $.white-id,
             $.black-id,
             $!result,
             $!handicap,
             $!komi,
-            |@comment).join(' ');
+            |@comment,
+        ).join(' ');
     }
 }
 

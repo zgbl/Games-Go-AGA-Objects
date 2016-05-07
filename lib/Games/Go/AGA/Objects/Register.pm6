@@ -181,7 +181,7 @@ class Games::Go::AGA::Objects::Register {
         ).append(
             %!directives.sort.map({ .value.sprint }),
         ).append(
-            %!players.sort.map({ .value.sprint }),
+            %!players.sort({ $^b.value.rating cmp $^a.value.rating }).map({ .value.sprint }),
         ).join("\n");
     }
 }

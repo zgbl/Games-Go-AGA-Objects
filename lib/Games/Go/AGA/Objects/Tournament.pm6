@@ -21,7 +21,7 @@ class Games::Go::AGA::Objects::Tournament
     has Games::Go::AGA::Objects::Round @!rounds;   # list of rounds, skip [0]
     has                                %!player-stats;
     has Bool                           $.suppress-changes = False;
-    has Bool                           $!change-pending = False;
+    has Bool                           $!change-pending = False;    # when changed called
     has Bool                           $!adj-ratings-stale = False; # when a Round changes
 
     submethod BUILD (:@rounds, :$suppress-changes, :$change-pending) {

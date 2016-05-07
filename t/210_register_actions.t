@@ -45,8 +45,8 @@ my Pair @texts = (
         ## Rounds 3
         ## Tourney Test  Tournament
         TMP1 Augustin, Reid 5d Club=PALO BYE Drop3
-        TMP11 Augustin, Abc 4k # with a comment
         USA11 Abc, Abc 4.4 DROP2 # 4 dan
+        TMP11 Augustin, Abc 4k # with a comment
         END
 );
 

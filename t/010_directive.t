@@ -89,5 +89,4 @@ $dut.value() ?? ok(False, 'non-Boolean is false') !! pass('non-Boolean is false'
 $dut.add-boolean('Xyz');
 $dut.value() ?? pass('Boolean is True') !! ok(False, 'Boolean is False');
 
-
 # vim: expandtab shiftwidth=4 ft=perl6
