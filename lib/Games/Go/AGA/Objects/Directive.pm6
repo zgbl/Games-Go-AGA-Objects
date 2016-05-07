@@ -8,9 +8,11 @@
 ################################################################################
 use v6;
 
+=head1 DESCRIPTION
+
 =begin pod
-Abstracts a single directive line from an AGA register.tde file.
-Directives generically look like:
+Games::Go::AGA::Objects::Directive Abstracts a single directive line from
+an AGA register.tde file.  Directives generically look like:
 
     ## Key Value
 
@@ -29,13 +31,25 @@ as when Drop contains several IDs:
 class Games::Go::AGA::Objects::Directive {
     use Games::Go::AGA::Objects::Types;
 
-    #| key => Directive name, like Tourney or DATE.
+=head1 ATTRIBUTES
+
+=begin pod
+Attributes may be retrieved with the name of the attribute (e.g:
+$directive.key). Settable attributes are set with the name prefixed by
+'set-' (e.g: $directive.set-value($new)).
+=end pod
+
+    #| key => Directive name, like 'Tourney' or 'DATE'.
     has Str-no-Space  $.key is required; # directive name
-    #| value => Directive value.  For Booleans, presence is sufficient.
-    has Directive-Val $.value = '';      # the value string, if any
-    #| comment => Optional comment.
+    #| value => Directive value.  May be any string that does not
+    #| contain '#' or newline.  Booleans don't need to have a value,
+    #| although it might be simpler to assign a 'truthy' value.
+    has Directive-Val $.value = '';
+    #| comment => Optional comment.  May be any string.  If it does not
+    #| start with white-space and '#', then '#' is pre-pended.
     has Str           $.comment = '';    # optional comment
-    #| change-callback => Callback called whenever B<set-value> or B<set-comment> are called.
+    #| change-callback => Callback called whenever B<changed>
+    #| is called (in B<set-value> and B<set-comment>).
     has               &.change-callback = sub { };
  
     my %booleans = (    # class variable: which keys are boolean
@@ -47,8 +61,15 @@ class Games::Go::AGA::Objects::Directive {
         Online_registration => 1,
     );
 
+=head1 METHODS
+
+=begin pod
+Methods that don't explicitly return a value return B<self> to enable
+chaining.
+=end pod
+
     #| Set a new B<change-callback>.
-    method set-change-callback (&ccb) { &!change-callback = &ccb; self };
+    method set-change-callback (&change-callback) { &!change-callback = &change-callback; self };
     #| Called to indicate a change.  Calls B<change-callback>.
     method changed {
         &!change-callback();
@@ -90,7 +111,7 @@ class Games::Go::AGA::Objects::Directive {
         self;
     }
     #| Returns boolean indicating if $key (or $!key) is a List.
-    method is-list (Str $key = $!key) { %lists{$key.tclc}; }
+    method is-list (Str $key = $!key) { %lists{$key.tclc}:exists; }
 
     ######################################
     #
@@ -100,6 +121,15 @@ class Games::Go::AGA::Objects::Directive {
     method set-value (Directive-Val $value) {
         $!value = $value;
         $.changed;
+    }
+    #| Get the B<$value>.  Sets 'but True' on B<Boolean>s.  Returns an array
+    #| (split on whitespace) for B<List>s.
+    method value {
+        given $!value {
+            when $.is-boolean { $_ but True }
+            when $.is-list    { $_.split(/\h+/) }
+            default { $_ };
+        }
     }
 
     ######################################
