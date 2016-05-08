@@ -51,7 +51,7 @@ my Pair @texts = (
 );
 
 for @texts -> $pair {
-    my $actions = Games::Go::AGA::Objects::Register::Actions.new();
+    my Games::Go::AGA::Objects::Register::Actions $actions .= new();
     my $dut = Games::Go::AGA::Objects::Register::Grammar.parse($pair.key, :actions($actions)).ast;
 
     is($dut.sprint, $pair.value.chomp, 'sprint matches');

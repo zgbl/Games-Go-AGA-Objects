@@ -13,8 +13,8 @@ plan 28;
 # use-ok('Games::Go::AGA::Objects::Directive');          # the module under test
 use Games::Go::AGA::Objects::Directive;     # the module under test
 
-my $dut;
-$dut = Games::Go::AGA::Objects::Directive.new(
+my Games::Go::AGA::Objects::Directive $dut;
+$dut .= new(
     key    => 'Aga-rated',
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Directive');
@@ -22,7 +22,7 @@ is $dut.key, 'Aga-rated',  q[key is 'Aga-rated'];
 is $dut.value, '',  q[value is ''];
 is $dut.sprint, '## Aga-rated', 'sprint OK';
 
-$dut = Games::Go::AGA::Objects::Directive.new(
+$dut .= new(
     key    => 'TEST',
     value  => 'test_value',
 );
@@ -32,7 +32,7 @@ is $dut.sprint, '## TEST test_value', 'sprint OK';
 is $dut.key, 'TEST',  q[key is 'TEST'];
 is $dut.value, 'test_value',  q[value is 'test_value'];
 
-$dut = Games::Go::AGA::Objects::Directive.new(
+$dut .= new(
     key     => 'Test_2',
     value   => 'test_value_1 tv_2 TV_4',
     comment => "a comment\n but discard this part",
@@ -71,7 +71,7 @@ is $dut.is-list('FOO').so, True, 'Foo is a list';
 
 throws-like(
     {
-        $dut = Games::Go::AGA::Objects::Directive.new(
+        $dut .= new(
             key    => 'key with spaces',
             value  => 'value',
         );
@@ -82,7 +82,7 @@ throws-like(
 is $dut.sprint, '## Test_2 New Value    #a comment', 'sprint is good';
 is $callback-called, 3, 'callback called';
 
-$dut = Games::Go::AGA::Objects::Directive.new(
+$dut .= new(
     :key(<Xyz>),
 );
 $dut.value() ?? ok(False, 'non-Boolean is false') !! pass('non-Boolean is false');

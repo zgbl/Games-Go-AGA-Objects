@@ -95,11 +95,15 @@ class Games::Go::AGA::Objects::Player
           !! $!last-name;
     }
     method sprint {
+        my $rOr = $.rank-or-rating;
+        if $rOr ~~ Rat {
+            $rOr = sprintf "%.1f", $rOr;   # want one decimal of accuracy, even if .0
+        }
         (
             $.id,
             $!last-name ~ ($!first-name.so ?? ',' !! ''),
             $!first-name,
-            $.rank-or-rating,
+            $rOr,
             $!flags,
             $!comment,
         ).grep({ .so }).join(' ');

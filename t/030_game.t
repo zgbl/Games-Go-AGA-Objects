@@ -14,7 +14,7 @@ plan 10;
 use Games::Go::AGA::Objects::Game;     # the module under test
 
 my $callback-called;
-my $dut = Games::Go::AGA::Objects::Game.new(
+my Games::Go::AGA::Objects::Game $dut .= new(
     white-id => 'Tst1',
     black-id => 'Tst22',
     komi     => 0.5,

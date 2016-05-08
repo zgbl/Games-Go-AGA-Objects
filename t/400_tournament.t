@@ -7,7 +7,7 @@
 ################################################################################
 use v6;
 use Test;
-plan 11;
+plan 12;
 
 use Games::Go::AGA::Objects::Directive;
 use Games::Go::AGA::Objects::Player;
@@ -15,7 +15,7 @@ use Games::Go::AGA::Objects::Game;
 use Games::Go::AGA::Objects::Round;
 use Games::Go::AGA::Objects::Tournament;          # the module under test
 
-my $dut = Games::Go::AGA::Objects::Tournament.new(
+my Games::Go::AGA::Objects::Tournament $dut .= new(
     :comments(['comment']),
     :directives( [
         Games::Go::AGA::Objects::Directive.new(
@@ -39,9 +39,9 @@ my $dut = Games::Go::AGA::Objects::Tournament.new(
         ),
         Games::Go::AGA::Objects::Player.new(
             id             => 'Tst001',
-            last-name      => 'Last Name 1',
-            first-name     => 'First Name 1',
-            rank-or-rating => '4D',
+            last-name      => 'LN 1',
+            first-name     => 'FN 1',
+            rank-or-rating => 4.0,
             flags          => 'Club=ABCD',
         ),
     ] ),
@@ -52,7 +52,7 @@ my $expect = (
     '## DATE 2016/04/28 # date comment',
     '## Tourney Test Tournament 1 # tourney comment',
     'TST22 Last Name 22, First Name 22 5D Club=FooB Xyz=ABC',
-    'TST1 Last Name 1, First Name 1 4D Club=ABCD',
+    'TST1 LN 1, FN 1 4.0 Club=ABCD',
 ).join("\n");
 
 my $dut-callback-called = 0;
@@ -91,7 +91,7 @@ $dut.add-player(    # dut CHANGE
         id             => 'TZZs04',
         last-name      => 'Last Name 4',
         first-name     => 'First Name 4',
-        rank-or-rating => '4k',
+        rank-or-rating => '14k',
         flags          => 'Club=BB44',
     ),
 );
@@ -109,7 +109,7 @@ $dut.round(1).add-game( $game );    # dut CHANGE, round CHANGE
 $expect = join("\n",
     $expect,
     'TST3 Last Name 3, First Name 3 3D Club=A333',
-    'TZZS4 Last Name 4, First Name 4 4k Club=BB44',
+    'TZZS4 Last Name 4, First Name 4 14k Club=BB44',
 );
 is $dut.sprint, $expect, 'sprint OK';
 
@@ -125,7 +125,30 @@ is $dut.player-stats('defeated', 'TST3'), [], 'TST3 wins';
 is $dut-callback-called, 7, 'dut-callback-called';
 is $game-callback-called, 2, 'game-callback-called';
 
-ok False, "TODO test send-to-AGA";
+throws-like(    # because no Rules directive
+    {$dut.send-to-aga()},
+    X::AdHoc,
+);
+$dut.set-directive('Rules', 'Mine');
+
+$expect = qq:to 'END';
+TOURNEY Test Tournament 1
+     start=2016-04-28
+    finish=2016-04-28
+     rules=Mine
+
+PLAYERS
+    TST22 Last Name 22, First Name 22   5.5
+     TST1                  LN 1, FN 1   4.0
+    TZZS4   Last Name 4, First Name 4 -14.5
+     TST3   Last Name 3, First Name 3   3.5
+
+GAMES
+     TST1     TST22 W 2 0.5
+    TZZS4      TST3 W 0 7.5
+END
+
+is $dut.send-to-aga(), $expect, 'send-to-AGA OK';
 
 
 # vim: expandtab shiftwidth=4 ft=perl6

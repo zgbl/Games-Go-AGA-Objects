@@ -11,7 +11,7 @@ plan 6;
 
 use Games::Go::AGA::Objects::Register;          # the module under test
 
-my $dut = Games::Go::AGA::Objects::Register.new(
+my Games::Go::AGA::Objects::Register $dut .= new(
     comments => (
         'pre-comment',
         'post pre-comment',

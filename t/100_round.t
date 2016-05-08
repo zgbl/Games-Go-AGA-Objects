@@ -14,7 +14,7 @@ plan 10;
 use Games::Go::AGA::Objects::Round;     # the module under test
 use Games::Go::AGA::Objects::Game;      # Rounds contain Games
 
-my $dut = Games::Go::AGA::Objects::Round.new(
+my Games::Go::AGA::Objects::Round $dut .= new(
     round-number  => 4,
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Round');
@@ -22,7 +22,7 @@ is $dut.get-next-table-number, 1, 'table 1';
 is $dut.get-next-table-number, 2, 'table 2';
 
 my $callback-called;
-$dut = Games::Go::AGA::Objects::Round.new(
+$dut .= new(
     round-number => 1,
     change-callback => sub { $callback-called++ },
 );
@@ -54,7 +54,7 @@ is $dut.sprint, "# Round 1\nTST1 TST22 w 0 7.5\nTST101 TST1022 b 0 0.5 # Tbl 2",
 my $game0 = $dut.game(0);
 my $game1 = $dut.game('TST1022');
 
-$dut = Games::Go::AGA::Objects::Round.new(
+$dut .= new(
     :round-number(1),
     :games( $game1, $game0 ),
 );

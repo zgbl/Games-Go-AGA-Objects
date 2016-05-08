@@ -140,16 +140,25 @@ class Games::Go::AGA::Objects::Tournament
     }
 
     method send-to-aga {
-        my @dates = $.get-directive('Date').value.split(/<[\s-]>+/);
-        @dates[1] ||= @dates[0];
+        my $date = $.get-directive('Date');
+        without $date {
+            die 'Please set a DATE directive (Start (optional) Finish) to use send-to-aga';
+        }
+        my @dates = $date.value;    # DATE is a Lists, so return goes into Array
+        @dates[1] ||= @dates[0];    # but there may only be one date there
         @dates[0] = @dates[0].subst(/\D/, '-', :g);
         @dates[1] = @dates[1].subst(/\D/, '-', :g);
+
+        my $rules = $.get-directive('RULES');
+        without $rules {
+            die 'Please set a RULES directive (e.g: AGA, Ing, etc) to use send-to-aga';
+        }
 
         (
             "TOURNEY {$.get-directive('Tourney').value}",
             "     start=@dates[0]",
             "    finish=@dates[1]",
-            "     rules={$.get-directive('RULES').value}",
+            "     rules={$rules.value}",
             '',
             'PLAYERS',
             |$.players-to-aga,
@@ -161,9 +170,9 @@ class Games::Go::AGA::Objects::Tournament
     }
 
     method players-to-aga {
-        my $name-width = $.players.map({ .length }).max;
+        my $name-width = 2 + $.players.map({ .last-name.chars + .first-name.chars }).max;
         $.players.map({
-            "%9.9s %*.*s %s\n".sprintf(
+            "%9.9s %*.*s %5.1f".sprintf(
                 .id,
                 $name-width,
                 $name-width,
@@ -175,11 +184,11 @@ class Games::Go::AGA::Objects::Tournament
 
     method games-to-aga {
         $.games.grep({ .winner }).map({
-            "%9.9s %9.9s %s %s %s\n".printf(
-                .white.id,
-                .black.id,
+            "%9.9s %9.9s %s %s %s".sprintf(
+                .white-id,
+                .black-id,
                 .result.uc,
-                .handi,
+                .handicap,
                 .komi,
             );
         });

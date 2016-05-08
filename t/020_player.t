@@ -25,7 +25,7 @@ is Games::Go::AGA::Objects::Player.rank('2d'), '2d', 'dan rank-to-rank';
 is Games::Go::AGA::Objects::Player.rank('5K'), '5K', 'kyu rank-to-rank';
 throws-like({ Games::Go::AGA::Objects::Player.normalize-id('xxx') }, X::AdHoc );
 
-my $dut = Games::Go::AGA::Objects::Player.new(
+my Games::Go::AGA::Objects::Player $dut .= new(
     :id('Test001'),
     :rank-or-rating('2d'),
     :last-name('test_value'),
@@ -36,7 +36,7 @@ is $dut.id, 'TEST1',  q[id is 'TEST1'];
 is $dut.last-name, 'test_value',  q[last-name is 'test_value'];
 is $dut.sprint, 'TEST1 test_value 2d', 'sprint OK';
 
-$dut = Games::Go::AGA::Objects::Player.new(
+$dut .= new(
     id             => 'Test2',
     last-name      => 'Last Name',
     first-name     => 'First Name',

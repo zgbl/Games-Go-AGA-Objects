@@ -40,8 +40,9 @@ class Games::Go::AGA::Objects::Register {
     #
     #   directives methods
     #
-    # called from Actions:
-    method directives(Games::Go::AGA::Objects::Directive @directives) {
+    # get/set array of directives
+    multi method directives { %!directives.values }
+    multi method directives (Games::Go::AGA::Objects::Directive @directives) {
         @directives.map({ .set-directive(*) });
     }
 
@@ -95,9 +96,11 @@ class Games::Go::AGA::Objects::Register {
     #
     #   player methods
     #
-    # called from Actions:
-    method players(Games::Go::AGA::Objects::Player @players) {
+    # get/set array of players
+    multi method players { %!players.values; }
+    multi method players (Games::Go::AGA::Objects::Player @players) {
         @players.map({ .add-player(*) });
+        self;
     }
 
     method add-player (Games::Go::AGA::Objects::Player $player) { self!_add-player($player) }
@@ -130,10 +133,9 @@ class Games::Go::AGA::Objects::Register {
     #
     #   comment methods
     #
-    # override default setter
-    method comments(Str @comments) {
-        @comments.map({ .add-comment(*) });
-    }
+    # get/set array of comments
+    multi method comments { @!comments }
+    multi method comments (Str @comments) { @comments.map({ .add-comment(*) }); }
 
     method add-comment (Str $comment) { self!_add-comment($comment) }
     method !_add-comment (Str $comment) {

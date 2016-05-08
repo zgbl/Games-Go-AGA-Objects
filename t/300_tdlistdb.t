@@ -54,7 +54,7 @@ my $i-qs = (
     '?',
 ).join(', ');
 
-my $dut = Games::Go::AGA::Objects::TDListDB.new(
+my Games::Go::AGA::Objects::TDListDB $dut .= new(
     db-filename => 'test_DELETE_ME.sqlite',
 );
 

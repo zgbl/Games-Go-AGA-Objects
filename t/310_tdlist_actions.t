@@ -30,7 +30,7 @@ my @match =
     ( '4',    'Last3',       'First3 M.',    '5',   '',     '',   '',      '',           ),
     ( '1112', 'Last',        'First M.',     '0',   'HIJK', 'WA', 'Full',  '',           );
 
-my $tdlistdb = Games::Go::AGA::Objects::TDListDB.new(
+my Games::Go::AGA::Objects::TDListDB $tdlistdb .= new(
     db-filename => 'test_DELETE_ME.sqlite'
 );
 
