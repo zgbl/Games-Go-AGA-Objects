@@ -1,4 +1,4 @@
-Games::Go::AGA::Objects
+# Games::Go::AGA::Objects
 
 Provides object definitions (and parsers) for various file formats defined
 by the American Go Association (AGA).
@@ -19,5 +19,5 @@ The AGA files handled by this package are:
 Grammers and Actions are included to parse these files and create the
 objects.
 
-Each object includes an 'sprint' method suitable for printing back to a
+Each object includes an `sprint` method suitable for printing back to a
 file.

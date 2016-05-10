@@ -19,4 +19,27 @@ role Games::Go::AGA::Objects::ID_Normalizer_Role {
     }
 }
 
+=begin pod
+
+=head1 SYNOPSIS
+
+use Games::Go::AGA::Objects::ID_Normalizer_Role;
+
+class My-Class
+    does Games::Go::AGA::Objects::ID_Normalizer_Role {
+
+=head1 DESCRIPTION
+
+Games::Go::AGA::Objects::ID_Normalizer_Role contains the B<normalize-id>
+method.
+
+=item normalize-id ( Str $id )
+
+Normalizes $id.  Finds a string within $id consisting of at least one
+letter followed by at least one number.  Throws an exception if no such
+string is found.  Returns the found string will all the letters
+upper-cased.
+
+=end pod
+
 # vim: expandtab shiftwidth=4 ft=perl6

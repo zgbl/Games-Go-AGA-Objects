@@ -8,10 +8,20 @@
 ################################################################################
 use v6;
 
-=head1 DESCRIPTION
+class Games::Go::AGA::Objects::Directive {
+    use Games::Go::AGA::Objects::Types;
 
 =begin pod
-Games::Go::AGA::Objects::Directive Abstracts a single directive line from
+
+=head1 SYNOPSIS
+
+    use Games::Go::AGA::Objects::Directive;
+
+    my Games::Go::AGA::Objects::Directive $directive .= new( :key<Rules>, :value<Ing>);
+
+=head1 DESCRIPTION
+
+Games::Go::AGA::Objects::Directive abstracts a single directive line from
 an AGA register.tde file.  Directives generically look like:
 
     ## Key Value
@@ -21,35 +31,43 @@ necessary:
 
     ## AGA_Rated
 
-List Directives can contain several Values separated by white-space, such
+List Directives can contain several values separated by white-space, such
 as when Drop contains several IDs:
 
     ## Drop3 USA123 USA456 TMP2
 
-=end pod
-
-class Games::Go::AGA::Objects::Directive {
-    use Games::Go::AGA::Objects::Types;
+List directives split the B<value> string on whitespace and return an array.
 
 =head1 ATTRIBUTES
 
-=begin pod
 Attributes may be retrieved with the name of the attribute (e.g:
 $directive.key). Settable attributes are set with the name prefixed by
-'set-' (e.g: $directive.set-value($new)).
+'set-' (e.g: $directive.set-value( ... )).
+
+=item key => Str [required]
+
+The name of the directive, such as 'Tourney' or 'DATE'.
+
+=item value => Str
+
+The directive's value, if any.  B<Boolean> directives don't require a value.
+B<List> directive values are split on whitespace.
+
+=item comment => Str
+
+Optional comment attached to this directive.  Comments start with '#' in
+file text.  If B<comment> does not start with '#' (possibly after initial
+whitespace), one is prepended.
+
+=item change-callback => &sub
+
+Callback called from the B<changed> method.
+
 =end pod
 
-    #| key => Directive name, like 'Tourney' or 'DATE'.
     has Str-no-Space  $.key is required; # directive name
-    #| value => Directive value.  May be any string that does not
-    #| contain '#' or newline.  Booleans don't need to have a value,
-    #| although it might be simpler to assign a 'truthy' value.
     has Directive-Val $.value = '';
-    #| comment => Optional comment.  May be any string.  If it does not
-    #| start with white-space and '#', then '#' is pre-pended.
     has Str           $.comment = '';    # optional comment
-    #| change-callback => Callback called whenever B<changed>
-    #| is called (in B<set-value> and B<set-comment>).
     has               &.change-callback = sub { };
  
     my %booleans = (    # class variable: which keys are boolean
@@ -61,16 +79,17 @@ $directive.key). Settable attributes are set with the name prefixed by
         Online_registration => 1,
     );
 
+=begin pod
 =head1 METHODS
 
-=begin pod
 Methods that don't explicitly return a value return B<self> to enable
 chaining.
 =end pod
 
     #| Set a new B<change-callback>.
     method set-change-callback (&change-callback) { &!change-callback = &change-callback; self };
-    #| Called to indicate a change.  Calls B<change-callback>.
+    #| Called to indicate a change (called from B<set-value> and
+    #| B<set-comment>).  Calls B<change-callback>.
     method changed {
         &!change-callback();
         self; }
@@ -91,7 +110,7 @@ chaining.
         %booleans{$key.tclc}:delete;
         self;
     }
-    #| Returns boolean indicating if $key (or $!key) is Boolean.
+    #| Returns boolean indicating if $key (or this directive) is Boolean.
     method is-boolean (Str $key = $!key) { %booleans{$key.tclc}:exists; }
 
     ######################################
@@ -110,7 +129,7 @@ chaining.
         %lists{$key.tclc}:delete;
         self;
     }
-    #| Returns boolean indicating if $key (or $!key) is a List.
+    #| Returns boolean indicating if $key (or this directive) is a List.
     method is-list (Str $key = $!key) { %lists{$key.tclc}:exists; }
 
     ######################################
@@ -122,7 +141,8 @@ chaining.
         $!value = $value;
         $.changed;
     }
-    #| Get the B<$value>.  Sets 'but True' on B<Boolean>s.  Returns an array
+    #| Get the B<$value>.  Sets 'but True' on B<Boolean>s so: C<if
+    #| $key.value> works even if no value has been set.  Returns an array
     #| (split on whitespace) for B<List>s.
     method value {
         given $!value {
@@ -164,5 +184,11 @@ chaining.
         $sprint;
     }
 }
+
+=begin pod
+=head1 SEE ALSO
+
+=item L<Games::Go::AGA::Objects::Register>
+=end pod
 
 # vim: expandtab shiftwidth=4 ft=perl6
