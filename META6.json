@@ -3,15 +3,7 @@
     "name"        : "Games::Go::AGA::Objects",
     "version"     : "0.1.0",
     "description" : "Objects and parsers for American Go Association files.",
-    "depends"     : [
-    ],
-    "source-url"  : "git://github.com/plugh212/Games-Go-AGA-Objects.git",
-    "authors" : [
-        "Reid Augustin"
-    ],
-    "support" : {
-        "source" : "git://github.com/plugh212/Games-Go-AGA-Objects.git",
-    },
+    "authors"     : [ "Reid Augustin" ],
     "provides"    : {
         "Games::Go::AGA::Objects.pm"                      : "lib::Games::Go::AGA::Objects.pm"
         "Games::Go::AGA::Objects::Round::Grammar.pm6"     : "lib::Games::Go::AGA::Objects::Round::Grammar.pm6"
@@ -30,4 +22,7 @@
         "Games::Go::AGA::Objects::TDList::Grammar.pm6"    : "lib::Games::Go::AGA::Objects::TDList::Grammar.pm6"
         "Games::Go::AGA::Objects::TDList::Actions.pm6"    : "lib::Games::Go::AGA::Objects::TDList::Actions.pm6"
     }
+    "depends"     : [ ],
+    "resources"   : [ ],
+    "source-url"  : "git://github.com/plugh212/Games-Go-AGA-Objects.git",
 }
