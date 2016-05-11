@@ -1,28 +1,28 @@
 {
-    "perl"	      : "6.c",
+    "perl"        : "6.c",
     "name"        : "Games::Go::AGA::Objects",
     "version"     : "0.1.0",
     "description" : "Objects and parsers for American Go Association files.",
     "authors"     : [ "Reid Augustin" ],
     "provides"    : {
-        "Games::Go::AGA::Objects.pm"                      : "lib::Games::Go::AGA::Objects.pm"
-        "Games::Go::AGA::Objects::Round::Grammar.pm6"     : "lib::Games::Go::AGA::Objects::Round::Grammar.pm6"
-        "Games::Go::AGA::Objects::Round::Actions.pm6"     : "lib::Games::Go::AGA::Objects::Round::Actions.pm6"
-        "Games::Go::AGA::Objects::Directive.pm6"          : "lib::Games::Go::AGA::Objects::Directive.pm6"
-        "Games::Go::AGA::Objects::Player.pm6"             : "lib::Games::Go::AGA::Objects::Player.pm6"
-        "Games::Go::AGA::Objects::Round.pm6"              : "lib::Games::Go::AGA::Objects::Round.pm6"
-        "Games::Go::AGA::Objects::Register.pm6"           : "lib::Games::Go::AGA::Objects::Register.pm6"
-        "Games::Go::AGA::Objects::ID_Normalizer_Role.pm6" : "lib::Games::Go::AGA::Objects::ID_Normalizer_Role.pm6"
-        "Games::Go::AGA::Objects::Tournament.pm6"         : "lib::Games::Go::AGA::Objects::Tournament.pm6"
-        "Games::Go::AGA::Objects::TDListDB.pm6"           : "lib::Games::Go::AGA::Objects::TDListDB.pm6"
-        "Games::Go::AGA::Objects::Game.pm6"               : "lib::Games::Go::AGA::Objects::Game.pm6"
-        "Games::Go::AGA::Objects::Types.pm6"              : "lib::Games::Go::AGA::Objects::Types.pm6"
-        "Games::Go::AGA::Objects::Register::Grammar.pm6"  : "lib::Games::Go::AGA::Objects::Register::Grammar.pm6"
-        "Games::Go::AGA::Objects::Register::Actions.pm6"  : "lib::Games::Go::AGA::Objects::Register::Actions.pm6"
-        "Games::Go::AGA::Objects::TDList::Grammar.pm6"    : "lib::Games::Go::AGA::Objects::TDList::Grammar.pm6"
-        "Games::Go::AGA::Objects::TDList::Actions.pm6"    : "lib::Games::Go::AGA::Objects::TDList::Actions.pm6"
-    }
+        "Games::Go::AGA::Objects.pm6"                     : "lib/Games/Go/AGA/Objects.pm6",
+        "Games::Go::AGA::Objects::Round::Grammar.pm6"     : "lib/Games/Go/AGA/Objects/Round/Grammar.pm6",
+        "Games::Go::AGA::Objects::Round::Actions.pm6"     : "lib/Games/Go/AGA/Objects/Round/Actions.pm6",
+        "Games::Go::AGA::Objects::Directive.pm6"          : "lib/Games/Go/AGA/Objects/Directive.pm6",
+        "Games::Go::AGA::Objects::Player.pm6"             : "lib/Games/Go/AGA/Objects/Player.pm6",
+        "Games::Go::AGA::Objects::Round.pm6"              : "lib/Games/Go/AGA/Objects/Round.pm6",
+        "Games::Go::AGA::Objects::Register.pm6"           : "lib/Games/Go/AGA/Objects/Register.pm6",
+        "Games::Go::AGA::Objects::ID_Normalizer_Role.pm6" : "lib/Games/Go/AGA/Objects/ID_Normalizer_Role.pm6",
+        "Games::Go::AGA::Objects::Tournament.pm6"         : "lib/Games/Go/AGA/Objects/Tournament.pm6",
+        "Games::Go::AGA::Objects::TDListDB.pm6"           : "lib/Games/Go/AGA/Objects/TDListDB.pm6",
+        "Games::Go::AGA::Objects::Game.pm6"               : "lib/Games/Go/AGA/Objects/Game.pm6",
+        "Games::Go::AGA::Objects::Types.pm6"              : "lib/Games/Go/AGA/Objects/Types.pm6",
+        "Games::Go::AGA::Objects::Register::Grammar.pm6"  : "lib/Games/Go/AGA/Objects/Register/Grammar.pm6",
+        "Games::Go::AGA::Objects::Register::Actions.pm6"  : "lib/Games/Go/AGA/Objects/Register/Actions.pm6",
+        "Games::Go::AGA::Objects::TDList::Grammar.pm6"    : "lib/Games/Go/AGA/Objects/TDList/Grammar.pm6",
+        "Games::Go::AGA::Objects::TDList::Actions.pm6"    : "lib/Games/Go/AGA/Objects/TDList/Actions.pm6"
+    },
     "depends"     : [ ],
     "resources"   : [ ],
-    "source-url"  : "git://github.com/plugh212/Games-Go-AGA-Objects.git",
+    "source-url"  : "git://github.com/plugh212/Games-Go-AGA-Objects.git"
 }
