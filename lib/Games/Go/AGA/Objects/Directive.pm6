@@ -17,7 +17,7 @@ class Games::Go::AGA::Objects::Directive {
 
     use Games::Go::AGA::Objects::Directive;
 
-    my Games::Go::AGA::Objects::Directive $directive .= new( :key<Rules>, :value<Ing>);
+    my Games::Go::AGA::Objects::Directive $directive .= new( :key<Rules>, :value<Ing> );
 
 =head1 DESCRIPTION
 

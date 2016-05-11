@@ -36,5 +36,25 @@ class Games::Go::AGA::Objects::TDList::Actions {
     }
 }
 
+=begin pod
+=head1 SYNOPSIS
+
+    use Games::Go::AGA::Objects::TDList:Actions;
+
+    my $content = slurp 'TDListN.txt';    # membership list from AGA
+    my Games::Go::AGA::Objects::TDList:Actions $actions .= new();
+    my $register = Games::Go::AGA::Objects::TDList:Grammar.parse($content, :actions($actions)).ast;
+
+=header1 DESCRIPTION
+
+Use Games::Go::AGA::Objects::TDList:Actions with the associated
+Games::Go::AGA::Objects::TDList:Grammar to create a
+Games::Go::AGA::Objects::TDListDB object directly from a file or string.
+
+=head1 SEE ALSO
+
+=item L<Games::Go::AGA::Objects::TDListDB>
+
+=end pod
 
 # vim: expandtab shiftwidth=4 ft=perl6

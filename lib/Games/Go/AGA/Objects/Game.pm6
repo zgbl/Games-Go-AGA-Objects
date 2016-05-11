@@ -18,7 +18,7 @@ class Games::Go::AGA::Objects::Game
 
     use Games::Go::AGA::Objects::Game;
 
-    my Games::Go::AGA::Objects::Game $game .= new( :key<Rules>, :value<Ing>);
+    my Games::Go::AGA::Objects::Game $game .= new( :white-id<TMP33>, ... );
 
 =header1 DESCRIPTION
 
@@ -76,34 +76,34 @@ chaining.
     #
     # accessors
     #
-    #|
+    #| Return the normalized white-id.
     method white-id { # override accessor to normalize IDs
         $!normalized-white-id //= $.normalize-id($!white-id);
         $!normalized-white-id;
     }
-    #| Returns the normalized id.
+    #| Return the normalized black-id.
     method black-id { # override accessor to normalize IDs
         $!normalized-black-id = $.normalize-id($!black-id) without $!normalized-black-id;
         $!normalized-black-id;
     }
-    #|
+    #| Return the original white-id.
     method un-normalized-white-id { # in case you want your original ID back
         $!white-id;
     }
-    #| Returns the original id.
+    #| Return the original black-id.
     method un-normalized-black-id { # in case you want your original ID back
         $!black-id;
     }
-    method set-white-id (AGA-Id $w)         { $!white-id         = $w; $.changed; }; #=
-    method set-black-id (AGA-Id $b)         { $!black-id         = $b; $.changed; }; #=
-    method set-table-number (Pos-Int $t)    { $!table-number     = $t; $.changed; }; #=
-    method set-handicap (Non-Neg-Int $h)    { $!handicap         = $h; $.changed; }; #=
-    method set-komi (Rat $k)                { $!komi             = $k; $.changed; }; #=
-    method set-result (Result $r)           { $!result           = $r; $.changed; }; #=
-    method set-white-adj-rating (Rating $w) { $!white-adj-rating = $w; $.changed; }; #=
-    method set-black-adj-rating (Rating $b) { $!black-adj-rating = $b; $.changed; }; #=
-    method set-change-callback (&ccb)       { &!change-callback  = &ccb; self;    }; #=
-    method set-comment(Str $c)              { $!comment          = $c; $.changes; }; #=
+    method set-white-id (AGA-Id $w)         { $!white-id         = $w; $.changed; }; #= Set B<white-id>
+    method set-black-id (AGA-Id $b)         { $!black-id         = $b; $.changed; }; #= Set B<black-id>
+    method set-table-number (Pos-Int $t)    { $!table-number     = $t; $.changed; }; #= Set B<table-number>
+    method set-handicap (Non-Neg-Int $h)    { $!handicap         = $h; $.changed; }; #= Set B<handicap>
+    method set-komi (Rat $k)                { $!komi             = $k; $.changed; }; #= Set B<komi>
+    method set-result (Result $r)           { $!result           = $r; $.changed; }; #= Set B<result>
+    method set-white-adj-rating (Rating $w) { $!white-adj-rating = $w; $.changed; }; #= Set B<white-adj-rating>
+    method set-black-adj-rating (Rating $b) { $!black-adj-rating = $b; $.changed; }; #= Set B<black-adj-rating>
+    method set-change-callback (&ccb)       { &!change-callback  = &ccb; self;    }; #= Set B<change-callback>
+    method set-comment(Str $c)              { $!comment          = $c; $.changes; }; #= Set B<comment>
 
     ######################################
     #
@@ -122,7 +122,7 @@ chaining.
     #| Calls B<change-callback>.
     method changed { &!change-callback(); self; }
 
-    #| Returns the ID of the winner, if B<result> is 'w' or 'b'.
+    #| Return the ID of the winner, if B<result> is 'w' or 'b'.
     method winner {
         given $!result {
             when 'w' {$.white-id};
@@ -130,7 +130,7 @@ chaining.
         }
     }
 
-    #| Returns the ID of the loser, if B<result> is 'w' or 'b'.
+    #| Return the ID of the loser, if B<result> is 'w' or 'b'.
     method loser {
         given $!result {
             when 'b' {$.white-id};
@@ -138,7 +138,7 @@ chaining.
         }
     }
 
-    #| Returns the game information printed into a string, suitable for
+    #| Return the game information printed into a string, suitable for
     #| reporting in a Round result file (1.tde, 2.tde, etc).
     method sprint {
         my @comment;

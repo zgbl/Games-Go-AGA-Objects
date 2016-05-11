@@ -16,7 +16,7 @@ use Games::Go::AGA::Objects::Game;     # the module under test
 my $callback-called;
 my Games::Go::AGA::Objects::Game $dut .= new(
     white-id => 'Tst1',
-    black-id => 'Tst22',
+    :black-id<Tst22>,
     komi     => 0.5,
     handicap => 2,
     change-callback => sub { $callback-called++ },

@@ -18,7 +18,40 @@ class Games::Go::AGA::Objects::Tournament
     is Games::Go::AGA::Objects::Register
     does Games::Go::AGA::Objects::ID_Normalizer_Role {
 
-    has Games::Go::AGA::Objects::Round @!rounds;   # list of rounds, skip [0]
+=begin pod
+=head1 SYNOPSIS
+
+    use Games::Go::AGA::Objects::Tournament;
+
+    my Games::Go::AGA::Objects::Tournament $tournament .= new( ... );
+
+=header1 DESCRIPTION
+
+Games::Go::AGA::Objects::Tournament represents a Tournament.  It inherits
+from Games::Go::AGA::Objects::Register (which contains lists of Directives,
+Players, and Comments), and adds an array of
+Games::Go::AGA::Objects::Rounds, and some methods for calculating player
+statistics.
+
+=head1 ATTRIBUTES
+
+Attributes may be retrieved with the name of the attribute (e.g:
+$directive.key). Settable attributes are set with the name prefixed by
+'set-' (e.g: $game.set-white-id( ... )).
+
+=item rounds => [ Games::Go::AGA::Objects::Round ] # list of rounds
+=item suppress-changes => Bool = False;
+
+When True, B<change-pending> is set and the in the
+B<changed> method, and the parent's (Game::Go::AGA::Objects::Register)
+B<changed> method is called.
+
+=item change-pending => Bool = False;    # when changed called
+=item adj-ratings-stale => Bool = False; # when a Round changes
+
+=end pod
+
+    has Games::Go::AGA::Objects::Round @!rounds;   # list of rounds
     has                                %!player-stats;
     has Bool                           $.suppress-changes = False;
     has Bool                           $!change-pending = False;    # when changed called
@@ -35,6 +68,8 @@ class Games::Go::AGA::Objects::Tournament
     method set-adj-ratings-stale (Bool $val = True) { $!adj-ratings-stale = $val; self; }
     method changed {
         if not $!suppress-changes {
+            %!player-stats = [];        # force re-count
+            $!adj-ratings-stale = True; # probably
             $!change-pending = True;
             callsame;
         }
@@ -56,8 +91,6 @@ class Games::Go::AGA::Objects::Tournament
         my &prev-callback = $round.change-callback;
         $round.set-change-callback(
             sub {
-                %!player-stats = [];        # force re-count
-                $!adj-ratings-stale = True; # probably
                 &prev-callback();
                 $self.changed;
             }
@@ -140,7 +173,7 @@ class Games::Go::AGA::Objects::Tournament
     }
 
     method send-to-aga {
-        my $date = $.get-directive('Date');
+        my $date = $.directive('Date');
         without $date {
             die 'Please set a DATE directive (Start (optional) Finish) to use send-to-aga';
         }
@@ -149,13 +182,13 @@ class Games::Go::AGA::Objects::Tournament
         @dates[0] = @dates[0].subst(/\D/, '-', :g);
         @dates[1] = @dates[1].subst(/\D/, '-', :g);
 
-        my $rules = $.get-directive('RULES');
+        my $rules = $.directive('RULES');
         without $rules {
             die 'Please set a RULES directive (e.g: AGA, Ing, etc) to use send-to-aga';
         }
 
         (
-            "TOURNEY {$.get-directive('Tourney').value}",
+            "TOURNEY {$.directive('Tourney').value}",
             "     start=@dates[0]",
             "    finish=@dates[1]",
             "     rules={$rules.value}",

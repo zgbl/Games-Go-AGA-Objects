@@ -18,8 +18,8 @@ my Games::Go::AGA::Objects::Round $dut .= new(
     round-number  => 4,
 );
 isa-ok($dut, 'Games::Go::AGA::Objects::Round');
-is $dut.get-next-table-number, 1, 'table 1';
-is $dut.get-next-table-number, 2, 'table 2';
+is $dut.next-table-number, 1, 'table 1';
+is $dut.next-table-number, 2, 'table 2';
 
 my $callback-called;
 $dut .= new(

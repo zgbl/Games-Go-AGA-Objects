@@ -81,23 +81,23 @@ chaining.
     #
     # accessors
     #
-    method set-id (AGA-Id $i)            { $!id              = $i; $.changed; } #=
-    method set-last-name (Str $l)        { $!last-name       = $l; $.changed; } #=
-    method set-first-name (Str $f)       { $!first-name      = $f; $.changed; } #=
-    method set-rank-or-rating (Rank-or-Rating $r) { $!rank-or-rating = $r; $.changed; } #=
-    method set-membership-type (Str $t)  { $!membership-type = $t; $.changed; } #=
-    method set-membership-date (Date $d) { $!membership-date = $d; $.changed; } #=
-    method set-state (Str $s)            { $!state           = $s; $.changed; } #=
-    method set-comment (Str $c)          { $!comment         = $c; $.changed; } #=
-    method set-sigma (Rat $s)            { $!sigma           = $s; $.changed; } #=
-    method set-flags (Str $f)            { $!flags           = $f; $.changed; } #=
-    method set-change-callback (&ccb)    { &!change-callback = &ccb; self;    } #=
+    method set-id (AGA-Id $i)            { $!id              = $i; $.changed; } #= Set B<id>.
+    method set-last-name (Str $l)        { $!last-name       = $l; $.changed; } #= Set B<last-name>.
+    method set-first-name (Str $f)       { $!first-name      = $f; $.changed; } #= Set B<first-name>.
+    method set-rank-or-rating (Rank-or-Rating $r) { $!rank-or-rating = $r; $.changed; } #= Set B<rank-or-rating>.
+    method set-membership-type (Str $t)  { $!membership-type = $t; $.changed; } #= Set B<membership-type>.
+    method set-membership-date (Date $d) { $!membership-date = $d; $.changed; } #= Set B<membership-date>.
+    method set-state (Str $s)            { $!state           = $s; $.changed; } #= Set B<state>.
+    method set-comment (Str $c)          { $!comment         = $c; $.changed; } #= Set B<comment>.
+    method set-sigma (Rat $s)            { $!sigma           = $s; $.changed; } #= Set B<sigma>.
+    method set-flags (Str $f)            { $!flags           = $f; $.changed; } #= Set B<flags>.
+    method set-change-callback (&ccb)    { &!change-callback = &ccb; self;    } #= Set B<change-callback>.
 
     ######################################
     #
     # methods
     #
-    method set-changed-flag (Bool $new = True) { $!change-flag = $new; self; } #=
+    method set-changed-flag (Bool $new = True) { $!change-flag = $new; self; } #= Set B<changed-flag>.
     #| Called to indicate a change (called from
     #| B<set-id>,
     #| B<set-last-name>,

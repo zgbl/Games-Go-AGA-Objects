@@ -53,4 +53,25 @@ class Games::Go::AGA::Objects::Register::Actions {
     }
 }
 
+=begin pod
+=head1 SYNOPSIS
+
+    use Games::Go::AGA::Objects::Register::Actions;
+
+    my $content = slurp 'register.tde';
+    my Games::Go::AGA::Objects::Register::Actions $actions .= new();
+    my $register = Games::Go::AGA::Objects::Register::Grammar.parse($content, :actions($actions)).ast;
+
+=header1 DESCRIPTION
+
+Use Games::Go::AGA::Objects::Register::Actions with the associated
+Games::Go::AGA::Objects::Register::Grammar to create a
+Games::Go::AGA::Objects::Register object directly from a file or string.
+
+=head1 SEE ALSO
+
+=item L<Games::Go::AGA::Objects::Register>
+
+=end pod
+
 # vim: expandtab shiftwidth=4 ft=perl6

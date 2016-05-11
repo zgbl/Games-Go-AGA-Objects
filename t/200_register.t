@@ -27,7 +27,7 @@ $dut.set-change-callback(
     }
 );
 
-is($dut.get-comments,
+is($dut.comments,
     (
         '# pre-comment',
         '# post pre-comment',
@@ -39,7 +39,7 @@ for (1 .. 5) -> $ii {
     my $hash = $ii % 2 ?? '' !! '# ';
     $dut.add-comment($hash ~ "comment $ii");
 }
-is($dut.get-comments, (
+is($dut.comments, (
         '# pre-comment',
         '# post pre-comment',
         '# comment 1',
@@ -51,7 +51,7 @@ is($dut.get-comments, (
 );
 
 $dut.delete-comment( rx/1||2||4/ );
-is($dut.get-comments, (
+is($dut.comments, (
         '# pre-comment',
         '# post pre-comment',
         '# comment 3',
