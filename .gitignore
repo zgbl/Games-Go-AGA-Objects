@@ -7,3 +7,4 @@ notes*
 lib/.precomp/
 FakeDir/
 *.sqlite
+dist.ini

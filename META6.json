@@ -1,8 +1,8 @@
 {
-    "name"        : "Games::Go::AGA::Objects",
-    "version"     : "0.1",
     "perl"	      : "6.c",
-    "description" : "Objects for American Go Association files.",
+    "name"        : "Games::Go::AGA::Objects",
+    "version"     : "0.1.0",
+    "description" : "Objects and parsers for American Go Association files.",
     "depends"     : [
     ],
     "source-url"  : "git://github.com/plugh212/Games-Go-AGA-Objects.git",
