@@ -24,6 +24,7 @@ class Games::Go::AGA::Objects::TDListDB {
     has      $.actions           = Games::Go::AGA::Objects::TDList::Actions.new;
     has Bool $.verbose           = False;
     has      &.print-callback    = method (*@a) { say(|@a) };
+    has      $!ua;      # UserAgent for HTTP fetch
     has      $!fh;
     has      %!sth-lib;
 
@@ -66,36 +67,6 @@ class Games::Go::AGA::Objects::TDListDB {
     method set-verbose (Bool $verbose)                    {$!verbose = $verbose; self}
 
 my $ii = 0;
-
-#   sub run {   # run as a script
-#       my ($class) = @_;
-
-#       require Getopt::Long;
-#       Getopt::Long.import(qw( :config pass_through ));
-
-#       exit 0 if (not GetOptions(
-#           'tdlist_file=s', => \$tdlist-filename, # update from file
-#           'sqlite_file=s', => \$db-filename,    # sqlite file
-#           'url=s',         => \$url,            # URL to update from
-#           'verbose',       => \$verbose,
-#           'help'           => sub { print $usage; exit 0; },
-#       ));
-
-#       my $tdlist = $class.new( verbose => $verbose );
-#       STDOUT.autoflush(1);
-
-#       if $url {
-#           if uc $url ne 'AGA' {
-#               $tdlist.url($url);
-#           }
-#           $url = $tdlist.url;
-#           print "Updating $.db-filename from AGA ($url)\n";
-#           $tdlist.update-from-url();
-#           exit;
-#       }
-#       print "Updating $.db-filename from file ($.tdlist-filename)\n";
-#       $tdlist.update-from-file($.tdlist-filename);
-#   }
 
     method dbh {
         without $!dbh {
@@ -189,20 +160,24 @@ my $ii = 0;
     }
 
     method update-from-url {
-        die "Sorry, can't update from URL yet";
-        #  if not $!ua {
-        #      $!ua = LWP::UserAgent.new;
-        #  }
+        without $!ua {
+            use HTTP::UserAgent;
+            $!ua = HTTP::UserAgent.new;
+            $!ua.timeout = 10;
+        }
 
-        #  $.my-print("Starting $!tdlist-filename fetch from $!url at {time}") if $!verbose;
-        #  $!ua.mirror($!url, $!tdlist-filename);
-        #  $.my-print("... fetch done at {time}\n") if $!verbose;
-        #  $.update-from-file($!tdlist-filename);
-        #  self
+        $.my-print("Starting fetch from $!url at {time}...") if $!verbose;
+        my $response = $!ua.get($!url);
+        if not $response.is-success {
+            die "Fetch from $!url failed: ", $response.status-line;
+        }
+        $.my-print("... fetch done at {time}.  Writing to $!tdlist-filename") if $!verbose;
+        spurt($!tdlist-filename, $response.content);
+        $.update-from-file();
+        self;
     }
 
     method update-from-file (Str $filename = $!tdlist-filename) {
-        $!tdlist-filename = $filename;
         my $fh = open $filename, :r;
         $.update-from-fh($fh);
         self;
@@ -274,8 +249,16 @@ my $ii = 0;
     method my-print (*@a) { self.&!print-callback(@a); self; }
 }
 
-sub MAIN ( Str $filename = 'TDList,txt' ) {
-    Games::Go::AGA::Objects::TDListDB.new().update-from-file($filename);
+sub MAIN ( Str $url = '' ) {
+    my $db = Games::Go::AGA::Objects::TDListDB.new();
+    if $url {
+        if $url ~~ :e { # is it a filename?
+            $db.update-from-file($url);
+            exit 0;
+        }
+        $db.url($url)
+    }
+    $db.update-from-url();
 }
 
 =begin pod
@@ -346,7 +329,7 @@ fetch is skipped (see perldoc LWP::UserAgent B<mirror>).
 =item url => 'http://where.to.find.tdlist'
 
 The URL to retrieve TDList from.  The default is
-'http://www.usgo.org/ratings/TDListN.txt'.
+'https://www.usgo.org/ratings/TDListN.txt'.
 
 =item max-update-errors => integer
 
