@@ -167,12 +167,19 @@ my $ii = 0;
         }
 
         $.my-print("Starting fetch from $!url at {time}...") if $!verbose;
-        my $response = $!ua.get($!url);
-        if not $response.is-success {
-            die "Fetch from $!url failed: ", $response.status-line;
+        if False {  # IO::Socket::SSL having trouble with AGA website?  SSLv3? no TLS?
+            my $response = $!ua.get($!url);
+            if not $response.is-success {
+                die "Fetch from $!url failed: ", $response.status-line;
+            }
+            $.my-print("... fetch done at {time}.  Writing to $!tdlist-filename") if $!verbose;
+            spurt($!tdlist-filename, $response.content);
         }
-        $.my-print("... fetch done at {time}.  Writing to $!tdlist-filename") if $!verbose;
-        spurt($!tdlist-filename, $response.content);
+        else {
+            my $retcode = shell "wget -O $!tdlist-filename $!url";
+            say "Returned $retcode";
+            $.my-print("... fetch to $!tdlist-filename done at {time}.") if $!verbose;
+        }
         $.update-from-file();
         self;
     }
@@ -189,18 +196,20 @@ my $ii = 0;
         $.my-print("Starting database update at {time}\n") if $!verbose;
         $.dbh.do('BEGIN');
         my @errors;
+        my $line-number = 0;
         for $fh.lines -> $line {
+            $line-number++;
             next if $line.not;    # skip empty line
 
             if $!verbose {
-                $.my-print('.')  if $fh.ins %% 1000;
-                $.my-print("\n") if $fh.ins %% 40000;
+                $.my-print('.')  if $line-number %% 1000;
+                $.my-print("\n") if $line-number %% 40000;
             }
             try {   # in case a line crashes, collect error but continue
                 $.update-from-line($line);
             }
             CATCH {
-                push @errors, $fh.ins => $_;
+                push @errors, $line-number => $_;
             }
             last if @errors.elems >= $.max-update-errors;
         }
@@ -250,9 +259,9 @@ my $ii = 0;
 }
 
 sub MAIN ( Str $url = '' ) {
-    my $db = Games::Go::AGA::Objects::TDListDB.new();
+    my $db = Games::Go::AGA::Objects::TDListDB.new( verbose => True, );
     if $url {
-        if $url ~~ :e { # is it a filename?
+        if $url.IO.e { # is it a filename?
             $db.update-from-file($url);
             exit 0;
         }
